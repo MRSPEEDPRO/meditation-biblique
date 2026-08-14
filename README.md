@@ -82,7 +82,7 @@ modifier ou supprimer (« Tout effacer ») à tout moment.
 | `tools/gen_content.py` | Génère et valide thèmes et versets du jour |
 | `build.py` | Assemble `index.html` |
 | `sw.js` | Service worker **facultatif**, utile seulement si le site est hébergé |
-| `.github/workflows/ci.yml` | Build, tests et contrôle d'autonomie à chaque push |
+| `tools/ci.workflow.yml` | Workflow d'intégration continue prêt à l'emploi (voir ci-dessous) |
 | `test_smoke.js` | 337 vérifications automatiques (jsdom) |
 
 ---
@@ -107,6 +107,20 @@ Les 31 170 versets pèsent 4,4 Mo en JSON. Ils sont réduits en texte compact
 (séparateurs `\x1e` / `\x1d` / `\x1c`), compressés en **gzip niveau 9**, puis encodés
 en base64 → **1,78 Mo**. Au démarrage, `src/inflate.js` (une implémentation DEFLATE
 maison, sans dépendance) les décompresse en mémoire en une fraction de seconde.
+
+---
+
+## 🤖 Intégration continue
+
+Un workflow GitHub Actions est fourni dans `tools/ci.workflow.yml` : il assemble `index.html`,
+vérifie qu'il est bien à jour par rapport à `src/`, lance les 337 tests et contrôle qu'aucune
+ressource externe n'a été introduite. Pour l'activer :
+
+```bash
+mkdir -p .github/workflows
+cp tools/ci.workflow.yml .github/workflows/ci.yml
+git add .github/workflows/ci.yml && git commit -m "CI" && git push
+```
 
 ---
 
