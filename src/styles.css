@@ -901,3 +901,39 @@ mark { background: color-mix(in srgb, var(--clay) 32%, transparent); color: inhe
   color: var(--ink);
 }
 .nudge .ic { font-size: 1.2rem; flex: 0 0 auto }
+
+/* filtres de recherche (portée : toute la Bible / AT / NT) */
+.qfilters {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  margin-bottom: 12px;
+}
+.qfilters .btn { flex: 1 1 auto; }
+
+/* carte-verset en image */
+.cv-preview {
+  display: block;
+  width: 100%;
+  max-width: 340px;
+  margin: 0 auto;
+  aspect-ratio: 1 / 1;
+  border-radius: 14px;
+  border: 1px solid var(--line);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, .08);
+}
+.cv-palettes {
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+  margin-top: 14px;
+}
+.cv-sw {
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  border: 2px solid var(--line);
+  cursor: pointer;
+  padding: 0;
+}
+.cv-sw.on { border-color: var(--sage-deep); box-shadow: 0 0 0 3px var(--sage-soft); }

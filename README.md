@@ -4,7 +4,7 @@
 
 **Application web de méditation biblique quotidienne — 100 % hors-ligne, en français.**
 
-Bible **Louis Segond 1910** (domaine public) · Version 1.2.0 · Licence MIT
+Bible **Louis Segond 1910** (domaine public) · Version 1.3.0 · Licence MIT
 
 </div>
 
@@ -12,7 +12,7 @@ Bible **Louis Segond 1910** (domaine public) · Version 1.2.0 · Licence MIT
 
 ## ✨ En bref
 
-Un **fichier `index.html` unique** (1,85 Mo) qui contient toute la Bible, tous les plans
+Un **fichier `index.html` unique** (1,91 Mo) qui contient toute la Bible, tous les plans
 et toute l'application. Téléchargez-le, ouvrez-le dans n'importe quel navigateur : ça marche.
 Sans internet, sans serveur, sans installation, sans compte.
 
@@ -40,14 +40,22 @@ Publiable tel quel sur GitHub Pages, Netlify, une clé USB ou envoyé par WhatsA
 | 📚 **Explorateur** | Les 66 livres, chapitre par chapitre |
 | 📖 **Lecteur plein écran** | Lecture du texte au fil, typographie sérif et versets en exposant · touchez un verset (ou plusieurs à la suite) pour l'écouter, le mettre en favori, l'annoter, le partager ou le copier · **surlignage** en 4 couleurs conservé d'une session à l'autre · navigation chapitre par chapitre, sélecteur livre/chapitre, présentation « un verset par ligne », reprise là où vous vous êtes arrêté |
 | 🧭 **Guide de méditation** | La méthode en 5 étapes |
-| ⚙️ **Réglages** | Taille du texte · mode nuit |
+| ⚙️ **Réglages** | Taille du texte · jour / nuit / auto · rappel · sauvegarde des données |
 | ↗ **Partage en un clic** | WhatsApp, Facebook, Telegram, X, e-mail · verset pré-rempli · fonctionne même sans l'API de partage du navigateur |
+| 🖼 **Carte-verset en image** | Génère une image carrée (1080×1080) du verset, 4 fonds au choix, à enregistrer ou partager · dessinée sur place, **sans réseau** |
+| 💾 **Sauvegarde & restauration** | Export complet en `.json` (profil, notes, favoris, surlignages, plans, série) · restauration par **fusion** ou **remplacement**, pour changer de téléphone sans rien perdre |
+| 📲 **Installable** | Ajout à l'écran d'accueil et lancement plein écran quand l'application est hébergée · manifeste embarqué, service worker facultatif |
+| ⏰ **Rappel quotidien** | Notification locale à l'heure choisie, sans compte ni serveur (facultatif) |
+| 🔍 **Recherche avancée** | Plusieurs mots (tous requis) · filtre Ancien / Nouveau Testament · saisie d'une **référence** (« Jean 3:16 », « ps 23 ») pour ouvrir le passage |
+| 🌗 **Thème auto** | Jour, nuit, ou **auto** suivant le réglage clair/sombre du téléphone |
 
 ---
 
 ## 🔒 Vie privée
 
 **Rien ne sort de votre téléphone.** Aucune requête réseau, aucun traceur, aucun serveur.
+La carte-image est dessinée sur l'appareil, le rappel est un simple minuteur local,
+et la sauvegarde est un fichier que **vous** enregistrez où vous voulez.
 Profil, journal, favoris, surlignages et progression vivent dans le `localStorage` du navigateur.
 Le code ne contient ni `fetch`, ni `XMLHttpRequest` — c'est vérifié par les tests.
 
@@ -73,7 +81,9 @@ modifier ou supprimer (« Tout effacer ») à tout moment.
 | `tools/parse_usfm.py` | Convertit les sources USFM en `bible_lsg.json` |
 | `tools/gen_content.py` | Génère et valide thèmes et versets du jour |
 | `build.py` | Assemble `index.html` |
-| `test_smoke.js` | 300 vérifications automatiques (jsdom) |
+| `sw.js` | Service worker **facultatif**, utile seulement si le site est hébergé |
+| `.github/workflows/ci.yml` | Build, tests et contrôle d'autonomie à chaque push |
+| `test_smoke.js` | 337 vérifications automatiques (jsdom) |
 
 ---
 
@@ -82,7 +92,7 @@ modifier ou supprimer (« Tout effacer ») à tout moment.
 ```bash
 npm install          # jsdom, pour les tests uniquement
 python3 build.py     # assemble index.html
-npm test             # 185 vérifications
+npm test             # 337 vérifications
 ```
 
 Pour régénérer les données éditoriales :
@@ -112,6 +122,10 @@ maison, sans dépendance) les décompresse en mémoire en une fraction de second
 - le profil local : création, accueil personnalisé, modification, persistance entre deux sessions
 - le lecteur plein écran : sélection de versets, surlignage persistant, navigation et reprise de lecture
 - la méditation personnalisée : suivi séquentiel, cycle, tirage aléatoire ≠ veille
+- la recherche avancée : multi-mots, filtres AT/NT, reconnaissance des références
+- la sauvegarde : export/import JSON, fusion idempotente, refus des fichiers étrangers
+- le thème automatique et la carte-verset en image (4 fonds, aperçu, enregistrement)
+- le manifeste d'installation : icônes embarquées, aucun fichier externe
 - l'autonomie du fichier : aucun script, style ou appel réseau externe
 
 ---

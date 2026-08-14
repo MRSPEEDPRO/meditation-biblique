@@ -733,6 +733,99 @@ ok(/env\(safe-area-inset-bottom/.test(html), "zone sûre iPhone prise en compte"
     })()), "ancienneté conservée entre deux sessions");
   dom2.window.close();
 
+  section("31. Recherche avancée");
+  clickTab("bible");
+  await searchNow("berger seigneur");
+  const multi = document.getElementById("qres").innerHTML;
+  ok(/contenant tous les mots/.test(multi), "recherche multi-mots annoncée");
+  ok(/data-qf="at"/.test(multi), "filtres de portée proposés");
+  const refDirecte = MB.chercherReference("Jean 3:16");
+  ok(refDirecte && refDirecte.a === "JHN" && refDirecte.c === 3 && refDirecte.v === 16,
+    "référence « Jean 3:16 » reconnue");
+  const refCourte = MB.chercherReference("ps 23");
+  ok(refCourte && refCourte.a === "PSA" && refCourte.c === 23, "référence abrégée « ps 23 » reconnue");
+  ok(MB.chercherReference("psaume 23.1").v === 1, "séparateur point accepté");
+  ok(MB.chercherReference("amour") === null, "un mot simple n'est pas pris pour une référence");
+  ok(MB.chercherReference("Jean 999") === null, "chapitre inexistant rejeté");
+  await searchNow("Jean 3:16");
+  ok(/📍 Référence/.test(document.getElementById("qres").innerHTML),
+    "accès direct affiché pour une référence");
+  await searchNow("");
+
+  section("32. Sauvegarde et restauration");
+  const avant = MB.state();
+  const nbNotes = avant.notes.length;
+  const paquet = {
+    format: MB.backupTag,
+    version: 1,
+    donnees: {
+      notes: [{ id: "test-import-1", date: "2026-02-01T08:00:00.000Z", ref: "JHN 3:16", texte: "Note importée" }],
+      favoris: ["ROM 8:28"],
+      surlignes: { "PSA 23:1": "v" },
+      plans: { "nt-90": { faits: [0, 1], debut: "2026-01-01" } },
+      serie: { dernier: "2026-02-01", jours: 3, record: 12 },
+      reglages: { taille: 1, theme: "jour" }
+    }
+  };
+  const bilan = MB.appliquerSauvegarde(JSON.parse(JSON.stringify(paquet)), true);
+  eq(bilan.notes, 1, "fusion : notes du fichier comptées");
+  ok(MB.state().notes.length === nbNotes + 1, "fusion : la note importée s'ajoute");
+  ok(MB.state().notes.some(n => n.id === "test-import-1"), "fusion : note retrouvée par son identifiant");
+  ok(MB.state().favoris.indexOf("ROM 8:28") !== -1, "fusion : favori importé");
+  eq(MB.state().surlignes["PSA 23:1"], "v", "fusion : surlignage importé");
+  ok(MB.state().plans["nt-90"].faits.indexOf(1) !== -1, "fusion : progression de plan importée");
+  ok(MB.state().serie.record >= 12, "fusion : record de série conservé");
+  MB.appliquerSauvegarde(JSON.parse(JSON.stringify(paquet)), true);
+  ok(MB.state().notes.filter(n => n.id === "test-import-1").length === 1,
+    "fusion idempotente : pas de doublon");
+  MB.appliquerSauvegarde(JSON.parse(JSON.stringify(paquet)), false);
+  eq(MB.state().notes.length, 1, "remplacement : seules les données du fichier subsistent");
+  let refuse = false;
+  try { MB.appliquerSauvegarde({ format: "autre-chose" }, true); } catch (e) { refuse = true; }
+  ok(refuse, "un fichier étranger est refusé");
+  clickTab("plus");
+  const dataCard = document.getElementById("main").innerHTML;
+  ok(/id="bkexport"/.test(dataCard), "bouton de sauvegarde présent");
+  ok(/id="bkimport"/.test(dataCard), "bouton de restauration présent");
+
+  section("33. Thème automatique");
+  ok(/data-mode2="auto"/.test(document.getElementById("main").innerHTML), "option de thème auto proposée");
+  document.querySelector('[data-mode2="auto"]').dispatchEvent(new window.MouseEvent("click", { bubbles: true }));
+  eq(MB.state().reglages.theme, "auto", "thème auto enregistré");
+  ok(["jour", "nuit"].indexOf(MB.themeEffectif()) !== -1, "le thème auto se résout en jour ou nuit");
+  eq(document.documentElement.getAttribute("data-theme"), MB.themeEffectif(),
+    "le thème effectif est appliqué au document");
+  document.getElementById("dark-toggle").dispatchEvent(new window.MouseEvent("click", { bubbles: true }));
+  ok(MB.state().reglages.theme !== "auto", "la bascule manuelle sort du mode auto");
+  document.querySelector('[data-mode2="jour"]').dispatchEvent(new window.MouseEvent("click", { bubbles: true }));
+
+  section("34. Carte-verset en image");
+  clickTab("jour");
+  document.querySelector("[data-share]").dispatchEvent(new window.MouseEvent("click", { bubbles: true }));
+  ok(/data-carte/.test(document.querySelector(".sheet").innerHTML),
+    "la feuille de partage propose la carte image");
+  document.querySelector("[data-carte]").dispatchEvent(new window.MouseEvent("click", { bubbles: true }));
+  const cvSheet = document.querySelector(".sheet");
+  ok(!!document.getElementById("cv-canvas"), "aperçu de la carte affiché");
+  ok(cvSheet.querySelectorAll("[data-cvp]").length === 4, "quatre fonds proposés");
+  ok(!!document.getElementById("cv-dl") && !!document.getElementById("cv-share"),
+    "enregistrement et partage de l'image proposés");
+  document.querySelector(".sheet-bg").remove();
+
+  section("35. Installation et hors-ligne");
+  const mf = MB.manifest();
+  eq(mf.short_name, "Méditation", "manifeste : nom court");
+  eq(mf.display, "standalone", "manifeste : affichage plein écran");
+  eq(mf.lang, "fr", "manifeste : langue française");
+  ok(mf.icons.length >= 2 && mf.icons.every(i => i.src.indexOf("data:image/svg+xml") === 0),
+    "manifeste : icônes embarquées, aucun fichier externe");
+  ok(mf.icons.some(i => i.purpose === "maskable"), "manifeste : icône adaptative Android");
+  ok(fs.existsSync(path.join(__dirname, "sw.js")), "service worker fourni pour l'hébergement");
+  const sw = fs.readFileSync(path.join(__dirname, "sw.js"), "utf8");
+  ok(/caches\.open/.test(sw) && /index\.html/.test(sw), "service worker : mise en cache de l'application");
+  ok(!/serviceWorker\.register\(\s*["'](?!sw\.js)/.test(code),
+    "aucun service worker externe enregistré");
+
   console.log("\n" + "─".repeat(54));
   if (fail) {
     console.log(`\x1b[31m❌ ${fail} test(s) en échec\x1b[0m sur ${pass + fail}`);
