@@ -901,3 +901,224 @@ mark { background: color-mix(in srgb, var(--clay) 32%, transparent); color: inhe
   color: var(--ink);
 }
 .nudge .ic { font-size: 1.2rem; flex: 0 0 auto }
+
+/* filtres de recherche (portée : toute la Bible / AT / NT) */
+.qfilters {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  margin-bottom: 12px;
+}
+.qfilters .btn { flex: 1 1 auto; }
+
+/* carte-verset en image */
+.cv-preview {
+  display: block;
+  width: 100%;
+  max-width: 340px;
+  margin: 0 auto;
+  aspect-ratio: 1 / 1;
+  border-radius: 14px;
+  border: 1px solid var(--line);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, .08);
+}
+.cv-palettes {
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+  margin-top: 14px;
+}
+.cv-sw {
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  border: 2px solid var(--line);
+  cursor: pointer;
+  padding: 0;
+}
+.cv-sw.on { border-color: var(--sage-deep); box-shadow: 0 0 0 3px var(--sage-soft); }
+
+/* barre de lecture audio du chapitre */
+.lectbar {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 14px calc(10px + env(safe-area-inset-bottom));
+  background: var(--card);
+  border-top: 1px solid var(--line);
+  box-shadow: 0 -6px 18px rgba(0, 0, 0, .07);
+  z-index: 4;
+}
+.lectbar .lect-info { flex: 1; min-width: 0; }
+.lectbar .lect-t {
+  font-family: var(--ui);
+  font-size: .8rem;
+  color: var(--muted);
+  margin-bottom: 5px;
+}
+.lect-bar {
+  height: 4px;
+  border-radius: 3px;
+  background: var(--line);
+  overflow: hidden;
+}
+.lect-bar i {
+  display: block;
+  height: 100%;
+  background: var(--sage-deep);
+  transition: width .25s ease;
+}
+.prose .v.lect {
+  background: var(--sage-soft);
+  box-shadow: 0 0 0 2px var(--sage);
+  border-radius: 4px;
+}
+[data-theme="nuit"] .prose .v.lect { background: rgba(111, 128, 96, .3); }
+/* on dégage la place occupée par la barre de lecture */
+.reader:has(.lectbar) .reader-body { padding-bottom: 84px; }
+
+/* --- Ma progression ------------------------------------------------------ */
+.wide-link {
+  display: block;
+  width: 100%;
+  text-align: left;
+  cursor: pointer;
+  font: inherit;
+  color: inherit;
+}
+.wide-link:hover { border-color: var(--sage); }
+
+.stats { margin-bottom: 14px; }
+.stat {
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: var(--r);
+  padding: 14px 12px;
+  text-align: center;
+}
+.stat .ic { font-size: 1.4rem; line-height: 1; }
+.stat .n {
+  font-family: var(--ui);
+  font-size: 1.6rem;
+  font-weight: 700;
+  color: var(--sage-deep);
+  margin-top: 4px;
+}
+.stat .l {
+  font-family: var(--ui);
+  font-size: .76rem;
+  color: var(--muted);
+  margin-top: 2px;
+}
+
+.cal-head, .cal {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 6px;
+}
+.cal-head {
+  margin-bottom: 6px;
+  font-family: var(--ui);
+  font-size: .7rem;
+  color: var(--muted);
+  text-align: center;
+}
+.cal-d {
+  aspect-ratio: 1 / 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 8px;
+  background: var(--line);
+  color: var(--muted);
+  font-family: var(--ui);
+  font-size: .72rem;
+}
+.cal-d.on {
+  background: var(--sage);
+  color: #fff;
+  font-weight: 600;
+}
+.cal-d.fut { opacity: .35; }
+.cal-d.today { box-shadow: 0 0 0 2px var(--sage-deep); }
+
+.badges {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(96px, 1fr));
+  gap: 10px;
+}
+.badge {
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 12px 8px;
+  text-align: center;
+  opacity: .45;
+  filter: grayscale(1);
+}
+.badge.on {
+  opacity: 1;
+  filter: none;
+  border-color: var(--sage);
+  background: var(--sage-soft);
+}
+.badge .bi { font-size: 1.5rem; line-height: 1.2; }
+.badge .bn {
+  font-family: var(--ui);
+  font-size: .76rem;
+  font-weight: 600;
+  margin-top: 3px;
+}
+.badge .bd {
+  font-family: var(--ui);
+  font-size: .68rem;
+  color: var(--muted);
+  margin-top: 2px;
+}
+
+/* étiquettes de notes */
+.tagpick {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px;
+}
+.tagc {
+  font-family: var(--ui);
+  font-size: .78rem;
+  padding: 6px 11px;
+  border-radius: 999px;
+  border: 1px solid var(--line);
+  background: var(--card);
+  color: var(--muted);
+  cursor: pointer;
+}
+.tagc.on {
+  border-color: var(--sage);
+  background: var(--sage-soft);
+  color: var(--sage-deep);
+  font-weight: 600;
+}
+.tagc.sm { font-size: .72rem; padding: 3px 9px; cursor: default; }
+.ntags { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 9px; }
+.card.souvenir { border-color: var(--clay); background: color-mix(in srgb, var(--clay) 8%, var(--card)); }
+
+/* barre de progression au démarrage */
+.load-bar {
+  width: 160px;
+  height: 4px;
+  margin: 14px auto 0;
+  border-radius: 3px;
+  background: var(--line);
+  overflow: hidden;
+}
+.load-bar i {
+  display: block;
+  height: 100%;
+  width: 8%;
+  border-radius: 3px;
+  background: var(--sage-deep);
+  transition: width .3s ease;
+}

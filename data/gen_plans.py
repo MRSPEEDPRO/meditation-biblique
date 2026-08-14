@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Génère les 11 plans de lecture (data/plans.json) puis data/embed_data.js,
+"""Génère les 16 plans de lecture (data/plans.json) puis data/embed_data.js,
 le fichier unique de données que build.py intègre dans index.html.
 
 Usage : python3 data/gen_plans.py
@@ -76,6 +76,36 @@ THEMATIC: list[tuple[str, str, str, str, list[tuple[str, str]]]] = [
          ("1SA 17:32-50", "David devant Goliath"),
          ("2TI 1:6-14", "Un esprit de force"),
          ("EPH 6:10-20", "Les armes de Dieu"),
+     ]),
+    ("t-deuil", "7 jours de consolation", "🕯️",
+     "Traverser le deuil accompagné par Dieu.", [
+         ("PSA 23:1-6", "Même dans la vallée"),
+         ("2CO 1:3-11", "Le Dieu de toute consolation"),
+         ("PSA 34:15-22", "Près de ceux qui ont le cœur brisé"),
+         ("JHN 11:17-44", "Jésus pleura"),
+         ("1TH 4:13-18", "Une espérance pour ceux qui dorment"),
+         ("ISA 61:1-3", "Un diadème au lieu de la cendre"),
+         ("REV 21:1-7", "Plus de deuil ni de cri"),
+     ]),
+    ("t-travail", "7 jours sur le travail", "🛠️",
+     "Donner du sens à son quotidien professionnel.", [
+         ("GEN 2:4-15", "Cultiver et garder"),
+         ("COL 3:17-25", "Comme pour le Seigneur"),
+         ("ECC 3:9-15", "Jouir du fruit de son travail"),
+         ("PRO 16:1-9", "Recommande à l'Éternel tes œuvres"),
+         ("EXO 20:8-11", "Le repos du septième jour"),
+         ("1TH 4:9-12", "Travailler de ses mains"),
+         ("PSA 90:12-17", "Affermis l'ouvrage de nos mains"),
+     ]),
+    ("t-argent", "7 jours sur l'argent", "🪙",
+     "Remettre les biens matériels à leur juste place.", [
+         ("MAT 6:19-24", "Là où est ton trésor"),
+         ("LUK 12:13-21", "L'insensé et ses greniers"),
+         ("PHP 4:10-20", "J'ai appris à être content"),
+         ("PRO 3:1-10", "Honore l'Éternel avec tes biens"),
+         ("1TI 6:6-19", "La racine de tous les maux"),
+         ("2CO 9:6-15", "Un donateur joyeux"),
+         ("MRK 12:38-44", "Les deux pites de la veuve"),
      ]),
 ]
 
@@ -169,6 +199,16 @@ def build_plans(bible: dict) -> list[dict]:
     add("proverbes-31", "Proverbes en 31 jours", "🦉",
         "Un chapitre de sagesse par jour du mois.",
         [(ch, fmt_range(bible, ch)) for ch in spread(proverbs, 31)])
+
+    sagesse = chapter_list(bible, ["JOB", "ECC", "SNG"])
+    add("sagesse-30", "Livres de sagesse en 30 jours", "📜",
+        "Job, l'Ecclésiaste et le Cantique des cantiques en un mois.",
+        [(ch, fmt_range(bible, ch)) for ch in spread(sagesse, 30)])
+
+    epitres = chapter_list(bible, BOOK_ORDER[BOOK_ORDER.index("ROM"):])
+    add("epitres-60", "Les épîtres en 60 jours", "✉️",
+        "De Romains à l'Apocalypse, la lettre aux premières Églises.",
+        [(ch, fmt_range(bible, ch)) for ch in spread(epitres, 60)])
 
     for pid, name, icon, desc, days in THEMATIC:
         add(pid, name, icon, desc,
