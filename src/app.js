@@ -219,7 +219,7 @@
   function toast(msg) {
     var old = $(".toast");
     if (old) old.remove();
-    var t = el('<div class="toast" role="status">' + esc(msg) + "</div>");
+    var t = el('<div class="toast" role="status" aria-live="polite">' + esc(msg) + "</div>");
     document.body.appendChild(t);
     clearTimeout(toastTimer);
     toastTimer = setTimeout(function () { t.remove(); }, 2600);
@@ -300,7 +300,8 @@
     var W = 1080, H = 1080;
     canvas.width = W;
     canvas.height = H;
-    var ctx = canvas.getContext("2d");
+    var ctx = canvas.getContext && canvas.getContext("2d");
+    if (!ctx) return null;   // environnement sans canvas : on n'affiche rien
     var p = palette;
 
     var g = ctx.createLinearGradient(0, 0, W, H);
@@ -375,7 +376,10 @@
 
     sheet("Carte du verset", h);
     var canvas = $("#cv-canvas");
-    dessinerCarte(canvas, ref, choix);
+    if (!dessinerCarte(canvas, ref, choix)) {
+      toast("Images non prises en charge par ce navigateur");
+      return;
+    }
 
     $$("[data-cvp]").forEach(function (b) {
       b.addEventListener("click", function () {
