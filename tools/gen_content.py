@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Génère les données éditoriales de l'application :
 
-  data/themes.json        19 thèmes de méditation × 14 versets = 266 versets
+  data/themes.json        24 thèmes de méditation × 14 versets = 336 versets
   data/daily_verses.json  247 versets du jour (rotation annuelle)
 
 Chaque référence est vérifiée contre data/bible_lsg.json : le script échoue
@@ -17,7 +17,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent.parent
 DATA = ROOT / "data"
 
-# --- 19 thèmes × 14 versets ------------------------------------------------
+# --- 24 thèmes × 14 versets ------------------------------------------------
 THEMES: list[tuple[str, str, str, list[str]]] = [
     ("foi", "La foi", "🌱", [
         "HEB 11:1", "HEB 11:6", "ROM 10:17", "MRK 11:22", "MRK 9:23",
@@ -113,6 +113,31 @@ THEMES: list[tuple[str, str, str, list[str]]] = [
         "PHP 4:19", "MAT 6:33", "PSA 23:1", "MAT 6:26", "PSA 34:10",
         "MAL 3:10", "LUK 6:38", "PRO 3:9", "PSA 37:25", "2CO 9:8",
         "DEU 8:18", "PSA 84:11", "GEN 22:14", "PSA 145:16",
+    ]),
+    ("deuil", "Le deuil et la consolation", "🕯️", [
+        "MAT 5:4", "PSA 34:18", "REV 21:4", "2CO 1:3", "2CO 1:4",
+        "PSA 147:3", "ISA 61:2", "JHN 11:25", "1TH 4:13", "PSA 23:4",
+        "ISA 66:13", "PSA 116:15", "ROM 8:18", "JHN 14:1",
+    ]),
+    ("travail", "Le travail", "🛠️", [
+        "COL 3:23", "PRO 16:3", "ECC 3:13", "PSA 90:17", "PRO 12:11",
+        "1CO 15:58", "GEN 2:15", "PRO 14:23", "2TH 3:10", "EPH 4:28",
+        "PRO 22:29", "ECC 9:10", "PRO 13:4", "1TH 4:11",
+    ]),
+    ("argent", "L'argent et le contentement", "🪙", [
+        "1TI 6:10", "HEB 13:5", "MAT 6:24", "PRO 22:7", "LUK 12:15",
+        "PHP 4:11", "PRO 11:28", "1TI 6:17", "PRO 3:9", "MAT 6:21",
+        "PRO 21:20", "ECC 5:10", "2CO 9:7", "PSA 62:10",
+    ]),
+    ("identite", "Mon identité en Christ", "🪞", [
+        "JHN 1:12", "2CO 5:17", "EPH 2:10", "1PE 2:9", "ROM 8:16",
+        "GAL 3:26", "PSA 139:14", "ISA 43:1", "EPH 1:5", "COL 3:3",
+        "ROM 8:1", "1JN 3:2", "JER 1:5", "GAL 2:20",
+    ]),
+    ("perseverance", "La persévérance", "🧗", [
+        "GAL 6:9", "HEB 12:1", "JAS 1:12", "ROM 5:3", "ROM 5:4",
+        "PHP 3:14", "1CO 9:24", "2TI 4:7", "HEB 10:36", "LUK 21:19",
+        "JAS 5:11", "ISA 40:31", "2TH 3:13", "REV 2:10",
     ]),
 ]
 

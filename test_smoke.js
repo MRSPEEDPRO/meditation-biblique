@@ -40,7 +40,7 @@ ok(!/<script[^>]+\ssrc=/i.test(html), "aucun script externe");
 ok(!/<link[^>]+stylesheet/i.test(html), "aucune feuille de style externe");
 ok(!/https?:\/\/(?!wa\.me|t\.me|www\.facebook|twitter\.com|www\.w3\.org)[^"'\s]+/
   .test(code.replace(/<svg[\s\S]*?<\/svg>/g, "")), "aucune ressource distante chargée");
-eq((html.match(/<script>/g) || []).length, (html.match(/<\/script>/g) || []).length,
+eq((html.match(/<script\b/g) || []).length, (html.match(/<\/script>/g) || []).length,
   "balises <script> équilibrées");
 ok(html.length > 1_000_000, "taille cohérente avec la Bible embarquée");
 
@@ -138,24 +138,33 @@ eq(cycle.size, 247, "rotation complète sur 247 jours sans répétition");
 
 section("7. Thèmes de méditation");
 const THEMES = window.THEMES;
-eq(THEMES.length, 19, "19 thèmes");
-eq(THEMES.reduce((n, t) => n + t.v.length, 0), 266, "266 versets thématiques");
+eq(THEMES.length, 24, "24 thèmes");
+eq(THEMES.reduce((n, t) => n + t.v.length, 0), 336, "336 versets thématiques");
 ok(THEMES.every(t => t.n && t.i && t.v.length === 14), "chaque thème : nom, icône, 14 versets");
 ok(THEMES.every(t => t.v.every(r => MB.verseText(r).length > 0)),
   "tous les versets thématiques existent");
-eq(new Set(THEMES.map(t => t.id)).size, 19, "identifiants de thèmes uniques");
+eq(new Set(THEMES.map(t => t.id)).size, 24, "identifiants de thèmes uniques");
 
 section("8. Plans de lecture");
 const PLANS = window.PLANS;
-eq(PLANS.length, 11, "11 plans");
-eq(new Set(PLANS.map(p => p.id)).size, 11, "identifiants de plans uniques");
+eq(PLANS.length, 16, "16 plans");
+eq(new Set(PLANS.map(p => p.id)).size, 16, "identifiants de plans uniques");
 const byId = Object.fromEntries(PLANS.map(p => [p.id, p]));
 eq(byId["bible-1an"].len, 365, "Bible en 1 an : 365 jours");
 eq(byId["nt-90"].len, 90, "Nouveau Testament : 90 jours");
 eq(byId["evangiles-40"].len, 40, "Évangiles : 40 jours");
 eq(byId["psaumes-30"].len, 30, "Psaumes : 30 jours");
 eq(byId["proverbes-31"].len, 31, "Proverbes : 31 jours");
-eq(PLANS.filter(p => p.len === 7).length, 6, "6 plans thématiques de 7 jours");
+eq(PLANS.filter(p => p.len === 7).length, 9, "9 plans thématiques de 7 jours");
+eq(byId["sagesse-30"].len, 30, "Livres de sagesse : 30 jours");
+eq(byId["epitres-60"].len, 60, "Épîtres : 60 jours");
+["t-deuil", "t-travail", "t-argent"].forEach(id => {
+  ok(byId[id] && byId[id].len === 7, `nouveau plan « ${id} » sur 7 jours`);
+});
+["deuil", "travail", "argent", "identite", "perseverance"].forEach(id => {
+  const t = THEMES.find(x => x.id === id);
+  ok(t && t.v.length === 14, `nouveau thème « ${id} » avec 14 versets`);
+});
 ok(PLANS.every(p => p.days.length === p.len), "nombre de jours cohérent pour chaque plan");
 ok(PLANS.every(p => p.days.every(d => d.r.length > 0 && d.t)),
   "chaque jour a une lecture et un titre");
@@ -271,7 +280,7 @@ function searchNow(text) {
 
 section("14. Plans : progression");
 clickTab("plans");
-eq(document.querySelectorAll("[data-plan]").length, 11, "11 plans affichés");
+eq(document.querySelectorAll("[data-plan]").length, 16, "16 plans affichés");
 document.querySelector('[data-plan="psaumes-30"]')
   .dispatchEvent(new window.MouseEvent("click", { bubbles: true }));
 ok(!!document.querySelector(".sheet"), "fiche du plan ouverte");
@@ -289,7 +298,7 @@ ok(dayHtml.includes("Psaumes"), "titre du passage affiché");
 section("15. Thèmes : ouverture");
 document.querySelector(".sheet-bg").remove();
 clickTab("themes");
-eq(document.querySelectorAll("#main [data-theme]").length, 19, "19 thèmes affichés");
+eq(document.querySelectorAll("#main [data-theme]").length, 24, "24 thèmes affichés");
 document.querySelector('#main [data-theme="paix"]').dispatchEvent(new window.MouseEvent("click", { bubbles: true }));
 const themeHtml = document.querySelector(".sheet").innerHTML;
 ok(/Jean 14:27/.test(themeHtml), "versets du thème affichés avec leur référence");
@@ -825,6 +834,87 @@ ok(/env\(safe-area-inset-bottom/.test(html), "zone sûre iPhone prise en compte"
   ok(/caches\.open/.test(sw) && /index\.html/.test(sw), "service worker : mise en cache de l'application");
   ok(!/serviceWorker\.register\(\s*["'](?!sw\.js)/.test(code),
     "aucun service worker externe enregistré");
+
+  section("36. Ma progression");
+  const St = MB.state();
+  St.histo = ["2026-08-14", "2026-08-13", "2026-08-12", "2026-08-05"];
+  St.serie = { dernier: "2026-08-14", jours: 3, record: 9 };
+  const stats = MB.stats();
+  eq(stats.total, 4, "jours médités comptés depuis l'historique");
+  eq(stats.record, 9, "record de série repris");
+  ok(MB.badges().length === 8, "8 badges définis (jours + séries)");
+  ok(MB.badges().filter(b => b.ok).length >= 2, "badges débloqués selon les seuils");
+  ok(MB.badges().every(b => b.b.ic && b.b.nom && b.b.desc), "chaque badge est décrit");
+  clickTab("plus");
+  ok(!!document.getElementById("go-progres"), "accès à la progression depuis « Plus »");
+  document.getElementById("go-progres").dispatchEvent(new window.MouseEvent("click", { bubbles: true }));
+  const prog = document.getElementById("main");
+  ok(/Ma progression/.test(prog.innerHTML), "la page de progression s'affiche");
+  eq(prog.querySelectorAll(".cal-d").length, 35, "calendrier de 5 semaines");
+  eq(prog.querySelectorAll(".cal-d.on").length, 4, "jours médités mis en évidence");
+  eq(prog.querySelectorAll(".badge").length, 8, "badges affichés");
+  ok(prog.querySelectorAll(".stat").length === 4, "quatre indicateurs clés");
+  ok(/record de série/.test(prog.textContent), "record de série présenté");
+
+  section("37. Journal enrichi");
+  const tags = MB.etiquettes();
+  ok(tags.length === 6 && tags.every(t => t.id && t.ic && t.nom), "6 étiquettes proposées");
+  St.notes = [
+    { id: "n1", date: "2026-08-14T09:00:00.000Z", ref: "JHN 3:16", texte: "Amour immense", tags: ["promesse"] },
+    { id: "n2", date: "2026-08-13T09:00:00.000Z", ref: "", texte: "Prière pour ma famille", tags: ["priere"] },
+    { id: "n3", date: "2025-08-14T09:00:00.000Z", ref: "PSA 23:1", texte: "Il y a un an déjà", tags: [] }
+  ];
+  eq(MB.souvenirs().length, 1, "une note du même jour l'an dernier");
+  eq(MB.souvenirs()[0].id, "n3", "le bon souvenir est retrouvé");
+  clickTab("journal");
+  const jrn = document.getElementById("main");
+  ok(/Il y a un an, jour pour jour/.test(jrn.innerHTML), "bloc souvenir affiché");
+  ok(!!document.getElementById("jq"), "champ de recherche dans le journal");
+  ok(jrn.querySelectorAll("[data-jtag]").length >= 3, "filtres par étiquette proposés");
+  ok(jrn.querySelectorAll("[data-nedit]").length === 3, "chaque note est modifiable");
+  ok(/🌈 Promesse/.test(jrn.innerHTML), "étiquette affichée sur la note");
+  // filtrer par étiquette
+  [...jrn.querySelectorAll("[data-jtag]")].find(b => b.dataset.jtag === "priere")
+    .dispatchEvent(new window.MouseEvent("click", { bubbles: true }));
+  eq(document.querySelectorAll("#main .note").length, 1, "filtre par étiquette appliqué");
+  ok(/Prière pour ma famille/.test(document.getElementById("main").innerHTML),
+    "la note filtrée est la bonne");
+  [...document.querySelectorAll("#main [data-jtag]")].find(b => b.dataset.jtag === "")
+    .dispatchEvent(new window.MouseEvent("click", { bubbles: true }));
+  eq(document.querySelectorAll("#main .note").length, 3, "retour à toutes les notes");
+  // modification d'une note existante
+  document.querySelector('[data-nedit="n1"]').dispatchEvent(new window.MouseEvent("click", { bubbles: true }));
+  const edit = document.querySelector(".sheet");
+  eq(document.getElementById("nt").value, "Amour immense", "le texte est repris pour modification");
+  ok(edit.querySelectorAll(".tagc.on").length === 1, "étiquette existante pré-sélectionnée");
+  document.getElementById("nt").value = "Amour immense et fidèle";
+  document.getElementById("nsave").dispatchEvent(new window.MouseEvent("click", { bubbles: true }));
+  eq(MB.state().notes.find(n => n.id === "n1").texte, "Amour immense et fidèle", "note modifiée");
+  eq(MB.state().notes.length, 3, "la modification ne crée pas de doublon");
+
+  section("38. Lecture audio du chapitre");
+  ok(/id="rd-play"/.test(html), "bouton d'écoute dans le lecteur");
+  ok(/lectbar/.test(html), "barre de lecture prévue dans les styles");
+  ok(/\.prose \.v\.lect/.test(html), "surlignage du verset en cours de lecture");
+  const L = MB.lecture();
+  ok(L && typeof L.actif === "boolean", "état de lecture exposé");
+  ok(MB.state().reglages.vitesse > 0, "vitesse de lecture par défaut définie");
+  clickTab("bible");
+  click('[data-book="PSA"]');
+  ok(!!document.getElementById("rd-play"), "le bouton d'écoute est présent à l'ouverture");
+  MB.stopLecture(true);
+  ok(!document.querySelector(".lectbar"), "aucune barre de lecture à l'arrêt");
+  document.getElementById("rd-close").dispatchEvent(new window.MouseEvent("click", { bubbles: true }));
+
+  section("39. Décompression en Web Worker");
+  ok(/id="inflate-src"/.test(html), "le code de décompression est identifiable pour le worker");
+  ok(/typeof self !== "undefined"/.test(html),
+    "inflate.js fonctionne aussi hors de la fenêtre (worker)");
+  ok(/new Worker\(/.test(html), "un Web Worker est utilisé au démarrage");
+  ok(/load-bar/.test(html), "barre de progression au chargement");
+  ok(typeof MB.construireBible === "function", "reconstruction de la Bible factorisée");
+  ok(BOOKS.length === 66 && BOOKS[0].c.length === 50,
+    "la Bible est complète après le repli synchrone");
 
   console.log("\n" + "─".repeat(54));
   if (fail) {

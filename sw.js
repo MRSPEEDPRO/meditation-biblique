@@ -7,7 +7,7 @@
  * Stratégie : « cache first » sur la coquille de l'application. Tout tient
  * dans index.html, il n'y a donc rien d'autre à mettre en cache.
  */
-var CACHE = "meditation-biblique-v1.3.0";
+var CACHE = "meditation-biblique-v1.4.0";
 var SHELL = ["./", "./index.html"];
 
 self.addEventListener("install", function (e) {

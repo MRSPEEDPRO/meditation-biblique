@@ -2,7 +2,8 @@
    Décompression gzip/DEFLATE (RFC 1951 / 1952) — implémentation autonome.
    Permet d'embarquer la Bible compressée dans le fichier HTML unique, sans
    aucune dépendance ni requête réseau.
-   Expose : window.gunzipToString(Uint8Array) -> string (UTF-8)
+   Expose : gunzipToString(Uint8Array) -> string (UTF-8)
+   Fonctionne dans la page comme dans un Web Worker (via « self »).
    ========================================================================== */
 (function () {
   "use strict";
@@ -220,6 +221,9 @@
     return s;
   }
 
-  window.gunzipToString = function (bytes) { return utf8(gunzip(bytes)); };
-  window.__inflateRaw = inflateRaw;
+  // « self » vaut window dans la page et le contexte global dans un Web Worker :
+  // le même code sert donc des deux côtés, sans duplication.
+  var G = typeof self !== "undefined" ? self : this;
+  G.gunzipToString = function (bytes) { return utf8(gunzip(bytes)); };
+  G.__inflateRaw = inflateRaw;
 })();

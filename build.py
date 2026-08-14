@@ -61,7 +61,7 @@ def main() -> int:
     problems = []
     if "/*__" in html:
         problems.append("un marqueur n'a pas été remplacé")
-    if html.count("<script>") != html.count("</script>"):
+    if len(re.findall(r"<script\b", html)) != html.count("</script>"):
         problems.append("balises <script> déséquilibrées")
     for w in problems:
         print("  ⚠", w)
