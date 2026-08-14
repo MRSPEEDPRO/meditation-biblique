@@ -916,6 +916,131 @@ ok(/env\(safe-area-inset-bottom/.test(html), "zone sûre iPhone prise en compte"
   ok(BOOKS.length === 66 && BOOKS[0].c.length === 50,
     "la Bible est complète après le repli synchrone");
 
+  section("40. Qualité de la voix");
+  // --- normalisation de la ponctuation pour la synthèse orale
+  const NP = MB.normaliserPonctuation;
+  ok(typeof NP === "function", "normaliseur de ponctuation exposé");
+  eq(NP("L’Éternel est mon berger: je ne manquerai de rien."),
+    "L’Éternel est mon berger, je ne manquerai de rien.",
+    "« : » devient une virgule");
+  eq(NP("Dieu dit: Voici; Éternel exauce."), "Dieu dit, Voici. Éternel exauce.",
+    "« ; » suivi d'une majuscule devient un point");
+  eq(NP("la lumière était bonne; et Dieu sépara"), "la lumière était bonne, et Dieu sépara",
+    "« ; » suivi d'une minuscule devient une virgule");
+  eq(NP("Celui qui s’appelle “je suis” m’a envoyé."), "Celui qui s’appelle je suis m’a envoyé.",
+    "guillemets retirés");
+  eq(NP("C’est cela! — la cause des deux parties"), "C’est cela! la cause des deux parties",
+    "tiret cadratin transformé en respiration");
+  eq(NP("Un esprit passa près de moi… Tous mes cheveux se hérissèrent…"),
+    "Un esprit passa près de moi, Tous mes cheveux se hérissèrent",
+    "« … » transformé en respiration");
+  ok(MB.verseText("PSA 23:1").indexOf(":") !== -1,
+    "le texte affiché garde sa ponctuation d'origine");
+  // 31 170 versets réels → aucun artefact (». ,», «! ,», «? ,», «,,»,
+  // doubles espaces, ponctuation orale résiduelle…)
+  let nbArtefacts = 0;
+  for (const lb of BOOKS) {
+    for (const lc of lb.c) {
+      for (const lv of lc) {
+        const ln = NP(lv);
+        if (/[;:«»“”"—–…]/.test(ln) || /[!?.,]\s*,/.test(ln) || /\s{2,}/.test(ln) ||
+            /^\s|\s$/.test(ln) || /^\s*,|,\s*$/.test(ln) || /,\s*[.!?]/.test(ln)) {
+          nbArtefacts++;
+        }
+      }
+    }
+  }
+  eq(nbArtefacts, 0, "contrôle des versets réels : aucun artefact à l'oral");
+
+  // --- synthèse vocale simulée (jsdom n'a pas de Web Speech API)
+  const enonces = [];
+  let cancelCalls = 0, pauseCalls = 0, resumeCalls = 0;
+  const voixChange = [];
+  let voicesListe = [];
+  const voixStub = {
+    getVoices: () => voicesListe,
+    speak: u => enonces.push(u),
+    cancel: () => { cancelCalls++; },
+    pause: () => { pauseCalls++; },
+    resume: () => { resumeCalls++; },
+    addEventListener: (ev, fn) => { if (ev === "voiceschanged") voixChange.push(fn); },
+    removeEventListener: () => {},
+    speaking: false
+  };
+  window.speechSynthesis = voixStub;
+  window.SpeechSynthesisUtterance = function (texte) {
+    this.text = texte;
+    this.rate = 1;
+    this.lang = "";
+    this.voice = null;
+    this.onend = null;
+    this.onerror = null;
+  };
+  // capture de l'intervalle de la garde anti-coupure (9 s)
+  const ticks = [];
+  const siOrig = window.setInterval.bind(window);
+  window.setInterval = function (fn, ms) {
+    if (ms === 9000) { ticks.push(fn); return ticks.length; }
+    return siOrig(fn, ms);
+  };
+
+  // --- attente des voix avant la première lecture
+  voicesListe = [];  // aucune voix encore chargée
+  MB.state().reglages.vitesse = 1.15;
+  MB.speak("L’Éternel est mon berger: je ne manquerai de rien.");
+  ok(enonces.length === 0, "attente des voix : rien n'est prononcé avant leur chargement");
+  voicesListe = [{ lang: "fr-FR", name: "Voix FR" }];
+  voixChange.forEach(fn => fn());   // événement « voiceschanged »
+  ok(enonces.length === 1, "l'énoncé démarre après le chargement des voix");
+  const uOral = enonces[0];
+  ok(/berger, je ne manquerai de rien/.test(uOral.text) && uOral.rate === 1.15,
+    "texte normalisé à l'oral et vitesse réglée appliquée (vitesse unifiée)");
+  MB.state().reglages.vitesse = 0.9;
+  uOral.onend();
+
+  // --- classement des voix
+  voicesListe = [
+    { lang: "fr-FR", name: "Zoe" },
+    { lang: "fr-FR", name: "Amélie" },
+    { lang: "en-US", name: "Anna" },
+    { lang: "de-DE", name: "Berta" }
+  ];
+  ok(typeof MB.voixTriees === "function" && MB.voixTriees().length === 4,
+    "classement des voix exposé, liste complète");
+  const ordre1 = MB.voixTriees().map(v => v.name).join("|");
+  const ordre2 = MB.voixTriees().map(v => v.name).join("|");
+  eq(ordre1, "Amélie|Zoe|Berta|Anna",
+    "voix françaises classées en premier, puis par langue et par nom");
+  ok(ordre1 === ordre2, "classement des voix déterministe");
+
+  // --- garde anti-coupure Chrome
+  ok(!MB.gardeActive(), "garde anti-coupure inactive au repos");
+  MB.speak("Bonjour: tout le monde");
+  ok(MB.gardeActive() && ticks.length >= 1, "garde armée pendant un énoncé");
+  const p0 = pauseCalls, r0 = resumeCalls;
+  voixStub.speaking = true;
+  ticks[ticks.length - 1]();   // tick des 9 s
+  ok(pauseCalls === p0 + 1 && resumeCalls === r0 + 1,
+    "le tick anti-coupure fait pause()/resume() quand la synthèse parle");
+  voixStub.speaking = false;
+  enonces[enonces.length - 1].onend();
+  ok(!MB.gardeActive(), "garde désarmée en fin d'énoncé");
+
+  // --- « Écouter » et lecture de chapitre ne se marchent plus dessus
+  ok((function () {
+    const n0 = enonces.length, c0 = cancelCalls;
+    MB.speak("Bonjour: le monde");
+    MB.lireChapitre(1);               // coupe « Écouter » et démarre le chapitre
+    const a = MB.lecture().actif && cancelCalls > c0 && enonces.length === n0 + 2;
+    MB.speak("Encore: un verset");    // coupe la lecture de chapitre en cours
+    const b = !MB.lecture().actif && enonces.length === n0 + 3 &&
+              enonces[enonces.length - 1].text.indexOf("Encore") === 0;
+    return a && b;
+  })(), "« Écouter » et lecture de chapitre ne se marchent plus dessus");
+  MB.stopLecture(true);
+  if (enonces[enonces.length - 1].onend) enonces[enonces.length - 1].onend();
+  window.setInterval = siOrig;
+
   console.log("\n" + "─".repeat(54));
   if (fail) {
     console.log(`\x1b[31m❌ ${fail} test(s) en échec\x1b[0m sur ${pass + fail}`);

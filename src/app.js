@@ -464,21 +464,149 @@
   }
 
   // --- Synthèse vocale -----------------------------------------------------
-  var speaking = false;
-  function speak(text, btn) {
-    if (!("speechSynthesis" in window)) { toast("Lecture audio non disponible"); return; }
-    if (speaking) { window.speechSynthesis.cancel(); speaking = false; if (btn) btn.classList.remove("on"); return; }
-    var u = new SpeechSynthesisUtterance(text);
-    u.lang = "fr-FR";
-    u.rate = 0.9;
-    var voices = window.speechSynthesis.getVoices();
-    for (var i = 0; i < voices.length; i++) {
-      if (/^fr/i.test(voices[i].lang)) { u.voice = voices[i]; break; }
+  // Ponctuation adaptée à l'oral (virgules, points, respirations), vitesse
+  // unifiée avec la lecture de chapitre, attente des voix avant la première
+  // lecture, et garde anti-coupure : Chrome interrompt l'audio au-delà de
+  // ~15 s, un discret pause()/resume() toutes les 9 s relance le compte.
+  var speaking = false;        // « Écouter » en cours
+  var ENONCE = false;          // un énoncé (Écouter ou chapitre) est en cours
+  var GARDE_DELAI = 9000;      // anti-coupure : intervalle de relance (ms)
+  var gardeTimer = null;
+  var VOIX_ATTENTES = false;   // les voix ont déjà été chargées une fois
+  var RESPIRATION = 260;       // respiration entre deux versets (ms)
+
+  // « : » → virgule · « ; » → point ou virgule selon la suite · guillemets
+  // retirés · tirets cadratins et « … » transformés en respirations.
+  function normaliserPonctuation(t) {
+    if (typeof t !== "string" || !t) return t;
+    return t
+      .replace(/[«»“”"]/g, "")              // guillemets retirés
+      .replace(/[—–]/g, ",")                // tirets cadratins → respiration
+      .replace(/…/g, ",")                   // points de suspension → respiration
+      .replace(/:/g, ",")                   // deux-points → virgule
+      .replace(/;\s*([A-ZÀÂÄÇÈÉÊËÎÏÔÙÛÜŸŒ])/g, ". $1")  // « ; » + majuscule → point
+      .replace(/;/g, ",")                   // « ; » + minuscule → virgule
+      .replace(/([!?])\s*,/g, "$1")         // « ! , » / « ? , » → « ! » / « ? »
+      .replace(/,\./g, ".")                 // « , . » → point
+      .replace(/\.\s*,/g, ".")              // « . , » → point
+      .replace(/,\s*,/g, ",")               // « , , » → une seule virgule
+      .replace(/,([^\s,])/g, ", $1")        // toujours un espace après la virgule
+      .replace(/[ \t\u00A0]{2,}/g, " ")     // espaces multiples → un espace
+      .replace(/^[\s,]+/, "")               // pas de respiration en tête
+      .replace(/[\s,]+$/, "");              // ni en queue
+  }
+
+  // Voix classées : françaises d'abord, puis par langue, puis par nom.
+  function voixTriees() {
+    var s = window.speechSynthesis;
+    var voices = (s && typeof s.getVoices === "function") ? (s.getVoices() || []) : [];
+    return voices.slice().sort(function (a, b) {
+      var af = /^fr/i.test(a.lang || "") ? 0 : 1;
+      var bf = /^fr/i.test(b.lang || "") ? 0 : 1;
+      if (af !== bf) return af - bf;
+      var al = String(a.lang || ""), bl = String(b.lang || "");
+      if (al !== bl) return al < bl ? -1 : 1;
+      var an = String(a.name || ""), bn = String(b.name || "");
+      return an === bn ? 0 : (an < bn ? -1 : 1);
+    });
+  }
+
+  function voixFr() {
+    var v = voixTriees();
+    for (var i = 0; i < v.length; i++) {
+      if (/^fr/i.test(v[i].lang || "")) return v[i];
     }
-    u.onend = u.onerror = function () { speaking = false; if (btn) btn.classList.remove("on"); };
+    return null;
+  }
+
+  function gardeTic() {
+    try {
+      var s = window.speechSynthesis;
+      if (s && !LECT.pause && s.speaking &&
+          typeof s.pause === "function" && typeof s.resume === "function") {
+        s.pause();
+        s.resume();
+      }
+    } catch (e) { /* aucune conséquence */ }
+  }
+
+  function armerGarde() {
+    if (gardeTimer) return;
+    gardeTimer = setInterval(gardeTic, GARDE_DELAI);
+  }
+
+  function desarmerGarde() {
+    if (!gardeTimer) return;
+    clearInterval(gardeTimer);
+    gardeTimer = null;
+  }
+
+  // Garde armée tant qu'un énoncé est en cours (Écouter ou lecture de chapitre).
+  function garderEnonciation() {
+    if (ENONCE) return;
+    ENONCE = true;
+    armerGarde();
+  }
+
+  function relacherEnonciation() {
+    if (!ENONCE) return;
+    ENONCE = false;
+    desarmerGarde();
+  }
+
+  // Les voix se chargent de façon asynchrone : on attend la première liste
+  // (événement « voiceschanged », repli 1,2 s) avant de lire.
+  function attendreVoix(cb) {
+    var s = window.speechSynthesis;
+    if (VOIX_ATTENTES) { cb(); return; }
+    var liste = (s && typeof s.getVoices === "function") ? (s.getVoices() || []) : [];
+    if (liste.length) { VOIX_ATTENTES = true; cb(); return; }
+    var fait = false;
+    var fin = function () {
+      if (fait) return;
+      fait = true;
+      try { s.removeEventListener("voiceschanged", fin); } catch (e) { /* rien */ }
+      VOIX_ATTENTES = true;
+      cb();
+    };
+    try { s.addEventListener("voiceschanged", fin); } catch (e) { /* rien */ }
+    setTimeout(fin, 1200);
+  }
+
+  function speak(text, btn) {
+    if (!("speechSynthesis" in window) || typeof SpeechSynthesisUtterance !== "function") {
+      toast("Lecture audio non disponible"); return;
+    }
+    if (speaking) {  // seconde pression : on arrête
+      speaking = false;
+      relacherEnonciation();
+      if (btn) btn.classList.remove("on");
+      try { window.speechSynthesis.cancel(); } catch (e) { /* rien */ }
+      return;
+    }
+    if (LECT.actif) stopLecture(true);   // ne pas chevaucher la lecture de chapitre
     speaking = true;
     if (btn) btn.classList.add("on");
-    window.speechSynthesis.speak(u);
+    garderEnonciation();
+    attendreVoix(function () {
+      if (!speaking) return;             // arrêté pendant l'attente des voix
+      var u = new SpeechSynthesisUtterance(normaliserPonctuation(text));
+      u.lang = "fr-FR";
+      u.rate = lectureVitesse();         // vitesse unifiée avec la lecture de chapitre
+      var v = voixFr();
+      if (v) u.voice = v;
+      u.onend = u.onerror = function () {
+        speaking = false;
+        relacherEnonciation();
+        if (btn) btn.classList.remove("on");
+      };
+      try { window.speechSynthesis.speak(u); }
+      catch (e) {
+        speaking = false;
+        relacherEnonciation();
+        if (btn) btn.classList.remove("on");
+      }
+    });
   }
 
   // --- Rappel de méditation (notification locale, facultatif) --------------
@@ -553,16 +681,10 @@
 
   // --- Lecture audio d'un chapitre entier ----------------------------------
   // Chaque verset est prononcé séparément : on peut ainsi suivre la lecture
-  // à l'écran et reprendre exactement là où l'on s'est arrêté.
-  var LECT = { actif: false, n: 0, total: 0, pause: false };
-
-  function voixFr() {
-    var voices = window.speechSynthesis.getVoices() || [];
-    for (var i = 0; i < voices.length; i++) {
-      if (/^fr/i.test(voices[i].lang)) return voices[i];
-    }
-    return null;
-  }
+  // à l'écran et reprendre exactement là où l'on s'est arrêté. Une respiration
+  // de 260 ms sépare deux versets.
+  var LECT = { actif: false, n: 0, total: 0, pause: false, gap: false };
+  var generation = 0;  // invalide les rappels d'un verset relancé (vitesse…)
 
   function lectureVitesse() {
     var v = S.reglages.vitesse;
@@ -573,11 +695,16 @@
     var etait = LECT.actif;
     LECT.actif = false;
     LECT.pause = false;
+    LECT.gap = false;
     LECT.n = 0;
+    generation++;
     try { window.speechSynthesis.cancel(); } catch (e) { /* rien à annuler */ }
     $$(".prose .v.lect").forEach(function (v) { v.classList.remove("lect"); });
     majBarreLecture();
-    if (etait && !silencieux) toast("Lecture arrêtée");
+    if (etait) {
+      relacherEnonciation();
+      if (!silencieux) toast("Lecture arrêtée");
+    }
   }
 
   function marquerVersetLu(n) {
@@ -590,7 +717,7 @@
   }
 
   function direVerset(n) {
-    if (!LECT.actif) return;
+    if (!LECT.actif || LECT.pause) return;
     var b = BY_ABBR[RD.a];
     var ch = b && b.c[RD.c - 1];
     if (!ch || n > ch.length) {
@@ -607,17 +734,33 @@
       return;
     }
     LECT.n = n;
+    LECT.gap = false;
+    var gen = ++generation;
     marquerVersetLu(n);
     majBarreLecture();
 
-    var u = new SpeechSynthesisUtterance(ch[n - 1]);
+    var txt = normaliserPonctuation(ch[n - 1]);
+    if (!txt) {  // verset muet : on souffle et on enchaîne
+      LECT.gap = true;
+      setTimeout(function () {
+        if (!LECT.actif || gen !== generation) return;
+        if (!LECT.pause) { LECT.gap = false; direVerset(n + 1); }
+      }, RESPIRATION);
+      return;
+    }
+    var u = new SpeechSynthesisUtterance(txt);
     u.lang = "fr-FR";
     u.rate = lectureVitesse();
     var v = voixFr();
     if (v) u.voice = v;
     u.onend = function () {
-      if (!LECT.actif || LECT.pause) return;
-      direVerset(n + 1);
+      if (!LECT.actif) return;
+      // respiration de 260 ms entre les versets
+      LECT.gap = true;
+      setTimeout(function () {
+        if (!LECT.actif || gen !== generation) return;
+        if (!LECT.pause) { LECT.gap = false; direVerset(n + 1); }
+      }, RESPIRATION);
     };
     u.onerror = function () { stopLecture(true); };
     try { window.speechSynthesis.speak(u); }
@@ -625,22 +768,39 @@
   }
 
   function lireChapitre(depart) {
-    if (!("speechSynthesis" in window)) { toast("Lecture audio non disponible"); return; }
-    if (speaking) { window.speechSynthesis.cancel(); speaking = false; }
+    if (!("speechSynthesis" in window) || typeof SpeechSynthesisUtterance !== "function") {
+      toast("Lecture audio non disponible"); return;
+    }
+    if (speaking) {  // ne pas chevaucher « Écouter »
+      speaking = false;
+      relacherEnonciation();
+      try { window.speechSynthesis.cancel(); } catch (e) { /* rien */ }
+    }
     var b = BY_ABBR[RD.a];
     if (!b) return;
     stopLecture(true);
     LECT.actif = true;
     LECT.pause = false;
+    LECT.gap = false;
     LECT.total = b.c[RD.c - 1].length;
-    direVerset(depart || 1);
+    garderEnonciation();
+    attendreVoix(function () {
+      if (!LECT.actif) return;   // arrêté pendant l'attente des voix
+      direVerset(depart || 1);
+    });
   }
 
   function pauseLecture() {
     if (!LECT.actif) return;
     if (LECT.pause) {
       LECT.pause = false;
-      try { window.speechSynthesis.resume(); } catch (e) { direVerset(LECT.n); }
+      var repris = false;
+      try { window.speechSynthesis.resume(); repris = true; } catch (e) { /* voix indisponible */ }
+      if (!repris) { direVerset(LECT.n); }
+      else if (LECT.gap) {  // pause pendant la respiration entre deux versets
+        LECT.gap = false;
+        direVerset(LECT.n + 1);
+      }
       majBarreLecture();
     } else {
       LECT.pause = true;
@@ -1646,7 +1806,7 @@
     var paquet = {
       format: BACKUP_TAG,
       version: 1,
-      app: "1.4.0",
+      app: "1.5.0",
       date: new Date().toISOString(),
       donnees: S
     };
@@ -2314,7 +2474,7 @@
 
     h += '<div class="card center"><div style="font-size:1.8rem">🌿</div>' +
       '<p style="margin:6px 0 2px;font-weight:600">Méditation Biblique</p>' +
-      '<p class="muted" style="font-size:.84rem;margin:0">Version 1.4.0 · fonctionne hors-ligne</p>' +
+      '<p class="muted" style="font-size:.84rem;margin:0">Version 1.5.0 · fonctionne hors-ligne</p>' +
       '<p class="muted" style="font-size:.8rem;margin:10px 0 0">Texte : Louis Segond 1910, domaine public.<br>' +
       "Vos données ne quittent jamais cet appareil.</p></div>";
     return h;
@@ -2694,7 +2854,15 @@
     $("#app").classList.remove("hide");
     render();
     if (!S.profil) onboarding();
-    if ("speechSynthesis" in window) window.speechSynthesis.getVoices();
+    if ("speechSynthesis" in window) {
+      // chargement des voix dès le démarrage (asynchrone dans Chrome)
+      try {
+        window.speechSynthesis.getVoices();
+        window.speechSynthesis.addEventListener("voiceschanged", function () {
+          VOIX_ATTENTES = true;
+        });
+      } catch (e) { /* ancien moteur de synthèse */ }
+    }
     setupPWA();
     planifierRappel();
   }
@@ -2745,6 +2913,10 @@
     lecture: function () { return LECT; },
     lireChapitre: lireChapitre,
     stopLecture: stopLecture,
+    speak: speak,
+    normaliserPonctuation: normaliserPonctuation,
+    voixTriees: voixTriees,
+    gardeActive: function () { return !!gardeTimer; },
     construireBible: construireBible,
     appliquerSauvegarde: appliquerSauvegarde,
     themeEffectif: themeEffectif,

@@ -4,7 +4,7 @@
 
 **Application web de méditation biblique quotidienne — 100 % hors-ligne, en français.**
 
-Bible **Louis Segond 1910** (domaine public) · Version 1.4.0 · Licence MIT
+Bible **Louis Segond 1910** (domaine public) · Version 1.5.0 · Licence MIT
 
 </div>
 
@@ -12,7 +12,7 @@ Bible **Louis Segond 1910** (domaine public) · Version 1.4.0 · Licence MIT
 
 ## ✨ En bref
 
-Un **fichier `index.html` unique** (1,94 Mo) qui contient toute la Bible, tous les plans
+Un **fichier `index.html` unique** (1,95 Mo) qui contient toute la Bible, tous les plans
 et toute l'application. Téléchargez-le, ouvrez-le dans n'importe quel navigateur : ça marche.
 Sans internet, sans serveur, sans installation, sans compte.
 
@@ -31,7 +31,7 @@ Publiable tel quel sur GitHub Pages, Netlify, une clé USB ou envoyé par WhatsA
 | 👤 **Mon profil** | Inscription **locale** à la première ouverture : prénom, image parmi 12, moment de méditation · l'accueil vous salue par votre prénom et affiche votre série de jours · modifiable à tout moment · **aucun compte en ligne, aucun mot de passe**, l'étape peut être passée |
 | 🌅 **Verset du jour** | Rotation sur **247 versets** choisis · navigation vers les jours précédents |
 | 🎯 **Ma méditation personnalisée** | Choisissez un **chapitre** ou un **livre entier** · méthode 📆 **Suivi** (dans l'ordre, avec cycle en fin de passage) ou 🎲 **Aléatoire** (jamais le verset de la veille, découvertes comptabilisées) · bascule à tout moment avec le verset du jour général |
-| 🔊 **Écoute audio** | Synthèse vocale française (Web Speech API) · **chapitre entier** lu d'un trait, verset surligné au fil de la lecture, pause, vitesse réglable |
+| 🔊 **Écoute audio** | Synthèse vocale française (Web Speech API) · **chapitre entier** lu d'un trait, verset surligné au fil de la lecture, pause, vitesse réglable · ponctuation adaptée à l'oral, respiration entre les versets, garde anti-coupure Chrome |
 | 📖 **16 plans de lecture** | Bible en 1 an (1 189 chapitres, ~4/jour) · NT en 90 j · Évangiles en 40 j · Psaumes en 30 j · Proverbes en 31 j · **Sagesse en 30 j** · **Épîtres en 60 j** · 9 plans thématiques de 7 j |
 | 🌸 **24 thèmes** | 336 versets sélectionnés : foi, pardon, joie, prière, épreuve, humilité, **deuil, travail, argent, identité, persévérance**… |
 | 📔 **Journal de méditation** | Notes privées gardées sur l'appareil · **recherche**, **6 étiquettes** (promesse, prière, exaucé…), modification · rappel « **il y a un an, jour pour jour** » · export en fichier texte |
