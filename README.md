@@ -2,9 +2,9 @@
 
 # 🌿 Méditation Biblique
 
-**Application web de méditation biblique quotidienne — 100 % hors-ligne, en français.**
+**Application web de méditation biblique quotidienne — 100 % hors-ligne, en français et en anglais.**
 
-Bible **Louis Segond 1910** (domaine public) · Version 1.5.0 · Licence MIT
+**12 versions de la Bible** (domaine public) · interface **bilingue FR/EN** · Version 1.7.0 · Licence MIT
 
 </div>
 
@@ -12,8 +12,8 @@ Bible **Louis Segond 1910** (domaine public) · Version 1.5.0 · Licence MIT
 
 ## ✨ En bref
 
-Un **fichier `index.html` unique** (1,95 Mo) qui contient toute la Bible, tous les plans
-et toute l'application. Téléchargez-le, ouvrez-le dans n'importe quel navigateur : ça marche.
+Un **fichier `index.html` unique** (20,7 Mo) qui contient **12 versions complètes de la Bible**,
+tous les plans et toute l'application. Téléchargez-le, ouvrez-le dans n'importe quel navigateur : ça marche.
 Sans internet, sans serveur, sans installation, sans compte.
 
 ```
@@ -47,8 +47,34 @@ Publiable tel quel sur GitHub Pages, Netlify, une clé USB ou envoyé par WhatsA
 | 📲 **Installable** | Ajout à l'écran d'accueil et lancement plein écran quand l'application est hébergée · manifeste embarqué, service worker facultatif |
 | ⏰ **Rappel quotidien** | Notification locale à l'heure choisie, sans compte ni serveur (facultatif) |
 | 🔍 **Recherche avancée** | Plusieurs mots (tous requis) · filtre Ancien / Nouveau Testament · saisie d'une **référence** (« Jean 3:16 », « ps 23 ») pour ouvrir le passage |
+| 📚 **12 versions de la Bible** | **Français** (7) : Louis Segond 1910, Darby, Ostervald, Martin, **Crampon 1923**, **Perret-Gentil & Rilliet**, **Bible Annotée de Neuchâtel** · **Anglais** (5) : King James, World English Bible, American Standard, Young's Literal, Bible in Basic English · toutes dans le **domaine public**, toutes embarquées, changement instantané |
+| 🔀 **Comparaison de versions** | Un même verset affiché dans les 12 traductions côte à côte, groupées par langue |
+| 🌍 **Interface bilingue FR/EN** | Sélecteur de langue qui traduit **toute** l'application : onglets, titres, boutons, plans, thèmes, dates et noms des livres bibliques |
 | 🌗 **Thème auto** | Jour, nuit, ou **auto** suivant le réglage clair/sombre du téléphone |
-| 📈 **Ma progression** | Calendrier des 5 dernières semaines · série en cours et record · **8 badges** · statistiques détaillées |
+| 📈 **Ma progression** | Calendrier des 5 dernières semaines · série en cours et record · **8 badges** · statistiques détaillées · séries **recalculées depuis les jours réellement médités** et sauvegardes scellées, pour que les chiffres veuillent dire quelque chose |
+
+---
+
+## 🎯 Une progression qui veut dire quelque chose
+
+Les séries et les badges ne sont pas de simples compteurs que l'on incrémente : ils sont
+**recalculés à partir des jours réellement médités** (`histo`). Un compteur modifié à la main
+est donc ramené à la réalité au prochain démarrage, les jours postérieurs à aujourd'hui
+(horloge avancée puis remise à l'heure) sont écartés, et les doublons fusionnés.
+
+Les fichiers de sauvegarde portent un **sceau** calculé sur l'historique. À la restauration,
+un fichier retouché est détecté : vos **notes et favoris sont intégralement conservés** —
+c'est votre travail — mais le record de série n'est pas repris sur parole, il est recalculé.
+Restaurer une sauvegarde honnête sur un nouveau téléphone fonctionne normalement.
+
+Tout ceci tourne sur l'appareil. Ce n'est donc **pas inviolable**, et ce n'est pas le but :
+qui lit ce code peut le contourner. L'objectif est d'empêcher les incohérences accidentelles
+et la triche facile, pour que le chiffre affiché reste honnête vis-à-vis de soi-même.
+
+> **À noter** — l'application n'a pas de comptes : le profil est purement local. Rien ne peut
+> empêcher une même personne d'avoir plusieurs profils (autre navigateur, autre appareil,
+> données effacées), et le vérifier supposerait un serveur et une identité vérifiée, à
+> rebours de la promesse « rien ne sort de votre téléphone ».
 
 ---
 
@@ -76,6 +102,13 @@ modifier ou supprimer (« Tout effacer ») à tout moment.
 | `src/app.js` | Logique de l'application |
 | `src/inflate.js` | Décompresseur gzip en JavaScript pur (aucune dépendance) |
 | `data/bible_lsg.json` | Bible LS1910 complète (4,4 Mo) |
+| `data/versions/*.b64` | Les 12 versions compressées (gzip + base64) + `index.json` |
+| `data/i18n.json` | Libellés de l'interface (clés × fr/en) |
+| `data/ui_en.json` | Traduction anglaise des phrases affichées (`exact` + `patterns`) |
+| `data/plans_en.json` | Noms et descriptions des plans en anglais |
+| `tools/import_versions.py` | Importe et normalise les 12 versions depuis les sources |
+| `tools/align_versions.py` | Calcule les tables de versification LSG → chaque version |
+| `tools/check_alignment.py` | Vérifie l'alignement sur des références témoins |
 | `data/themes.json` · `daily_verses.json` · `plans.json` | Contenu éditorial |
 | `data/embed_data.js` | Données embarquées : Bible compressée + thèmes + plans + versets du jour |
 | `data/gen_plans.py` | Régénère les 16 plans et `embed_data.js` |
@@ -84,7 +117,7 @@ modifier ou supprimer (« Tout effacer ») à tout moment.
 | `build.py` | Assemble `index.html` |
 | `sw.js` | Service worker **facultatif**, utile seulement si le site est hébergé |
 | `tools/ci.workflow.yml` | Workflow d'intégration continue prêt à l'emploi (voir ci-dessous) |
-| `test_smoke.js` | 387 vérifications automatiques (jsdom) |
+| `test_smoke.js` | 468 vérifications automatiques (jsdom) |
 
 ---
 
@@ -93,7 +126,7 @@ modifier ou supprimer (« Tout effacer ») à tout moment.
 ```bash
 npm install          # jsdom, pour les tests uniquement
 python3 build.py     # assemble index.html
-npm test             # 387 vérifications
+npm test             # 468 vérifications
 ```
 
 Pour régénérer les données éditoriales :
@@ -104,9 +137,11 @@ python3 data/gen_plans.py    # plans.json + embed_data.js
 
 ### Comment ça tient dans un seul fichier
 
-Les 31 170 versets pèsent 4,4 Mo en JSON. Ils sont réduits en texte compact
-(séparateurs `\x1e` / `\x1d` / `\x1c`), compressés en **gzip niveau 9**, puis encodés
-en base64 → **1,78 Mo**. Au démarrage, `src/inflate.js` (une implémentation DEFLATE
+Chaque version (~31 000 versets) est réduite en texte compact
+(séparateurs `\x1e` / `\x1d` / `\x1c`), compressée en **gzip niveau 9**, puis encodée
+en base64 → ~1,7 Mo par version, **20,6 Mo** pour les douze. Seule la version affichée est
+décompressée, **à la demande** : changer de version décompresse la nouvelle et garde
+les précédentes en cache mémoire. Au démarrage, `src/inflate.js` (une implémentation DEFLATE
 maison, sans dépendance) les décompresse en mémoire en une fraction de seconde — dans un
 **Web Worker**, pour que l'écran de démarrage reste fluide, avec repli synchrone automatique
 si les workers ne sont pas disponibles.
@@ -116,7 +151,7 @@ si les workers ne sont pas disponibles.
 ## 🤖 Intégration continue
 
 Un workflow GitHub Actions est fourni dans `tools/ci.workflow.yml` : il assemble `index.html`,
-vérifie qu'il est bien à jour par rapport à `src/`, lance les 387 tests et contrôle qu'aucune
+vérifie qu'il est bien à jour par rapport à `src/`, lance les 468 tests et contrôle qu'aucune
 ressource externe n'a été introduite. Pour l'activer :
 
 ```bash
@@ -144,17 +179,57 @@ git add .github/workflows/ci.yml && git commit -m "CI" && git push
 - le thème automatique et la carte-verset en image (4 fonds, aperçu, enregistrement)
 - le manifeste d'installation : icônes embarquées, aucun fichier externe
 - la progression : calendrier, séries, badges et statistiques
+- l'intégrité de la progression : série déduite de l'historique, compteur gonflé ramené
+  à la réalité, jours futurs et doublons écartés, sauvegarde retouchée détectée par son sceau
 - le journal enrichi : recherche, filtres par étiquette, modification, souvenirs d'un an
 - la lecture audio du chapitre et le surlignage du verset prononcé
 - la décompression en Web Worker et son repli synchrone
+- les 12 versions : texte non vide sur des références clés, textes bien distincts entre versions
+- Crampon : canon hébreu respecté (ajouts grecs d'Esther et de Daniel écartés)
+- la versification : conversion LSG → KJV (Ésaïe 9:5→9:6, Jonas 2:1→1:17, Ecclésiaste 4:17→5:1)
+- l'interface bilingue : bascule FR/EN, traduction des vues, des plans, des thèmes et des noms de livres
 - l'autonomie du fichier : aucun script, style ou appel réseau externe
 
 ---
 
-## 📖 Source du texte
+## 📖 Sources des textes
 
-Louis Segond 1910, **domaine public**, éditions USFM du dépôt
-[`BibleCorps/FRA-B-LSG1910-PD-UBS`](https://github.com/BibleCorps/FRA-B-LSG1910-PD-UBS).
+Les 12 versions sont dans le **domaine public**.
+
+| Version | Langue | Année | Source |
+|---|---|---|---|
+| Louis Segond | fr | 1910 | [`BibleCorps/FRA-B-LSG1910-PD-UBS`](https://github.com/BibleCorps/FRA-B-LSG1910-PD-UBS) (USFM) |
+| Crampon | fr | 1923 | [`scrollmapper/bible_databases`](https://github.com/scrollmapper/bible_databases) |
+| Perret-Gentil & Rilliet | fr | 1866 | [`scrollmapper/bible_databases`](https://github.com/scrollmapper/bible_databases) |
+| Bible Annotée de Neuchâtel | fr | 1899 | [`scrollmapper/bible_databases`](https://github.com/scrollmapper/bible_databases) |
+| Darby | fr | 1885 | [`scrollmapper/bible_databases`](https://github.com/scrollmapper/bible_databases) |
+| Ostervald | fr | 1867 | [`splitant/php-bible-api`](https://github.com/splitant/php-bible-api) |
+| Martin | fr | 1744 | [`scrollmapper/bible_databases`](https://github.com/scrollmapper/bible_databases) |
+| King James Version | en | 1769 | [`scrollmapper/bible_databases`](https://github.com/scrollmapper/bible_databases) |
+| World English Bible | en | 2000 | [`world-english-bible`](https://www.npmjs.com/package/world-english-bible) (npm) |
+| American Standard Version | en | 1901 | [`scrollmapper/bible_databases`](https://github.com/scrollmapper/bible_databases) |
+| Young's Literal Translation | en | 1898 | [`scrollmapper/bible_databases`](https://github.com/scrollmapper/bible_databases) |
+| Bible in Basic English | en | 1949 | [`scrollmapper/bible_databases`](https://github.com/scrollmapper/bible_databases) |
+
+### Le cas Crampon
+
+Crampon suit la Vulgate : il compte 73 livres et insère des passages grecs *à
+l'intérieur* d'Esther et de Daniel. Pour rester comparable aux onze autres
+versions, l'importeur revient au canon hébreu de 66 livres — les 7 livres
+deutérocanoniques sont écartés, la Prière d'Azarias (Daniel 3:24-90) est
+retirée et la suite canonique recollée (Crampon 3:91-97 → Daniel 3:24-30,
+Crampon 3:98-100 → Daniel 4:1-3), Suzanne et Bel et le Dragon sont écartés,
+de même que l'épilogue grec d'Esther. Daniel et Esther retrouvent ainsi
+exactement le découpage de la Louis Segond.
+
+### Versification
+
+Les traductions ne numérotent pas toujours les versets de la même façon : Ésaïe 9:5 (LSG)
+correspond à Ésaïe 9:6 (KJV), Jonas 2:1 à Jonas 1:17, etc. `tools/align_versions.py`
+calcule pour chaque version une **table de correspondance** depuis la numérotation Louis
+Segond ; l'application la consulte à l'affichage, de sorte qu'une référence enregistrée en
+favori ou citée dans une note pointe toujours sur le bon verset, quelle que soit la version
+sélectionnée. `tools/check_alignment.py` contrôle ces tables sur des cas témoins.
 
 ---
 

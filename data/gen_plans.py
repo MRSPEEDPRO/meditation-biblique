@@ -250,6 +250,24 @@ def validate(bible: dict, plans: list[dict]) -> list[str]:
     return errs
 
 
+def add_english(plans: list[dict]) -> None:
+    """Ajoute le nom et la description anglais (data/plans_en.json)."""
+    path = DATA / "plans_en.json"
+    if not path.exists():
+        return
+    en = json.loads(path.read_text(encoding="utf-8"))
+    for p in plans:
+        tr = en.get(p["id"])
+        if not tr:
+            continue
+        p["ne"] = tr["n"]
+        p["de"] = tr["d"]
+        titles = tr.get("days")
+        if titles and len(titles) == len(p["days"]):
+            for day, t in zip(p["days"], titles):
+                day["te"] = t
+
+
 def main() -> int:
     bible = load_bible()
     plans = build_plans(bible)
@@ -259,6 +277,7 @@ def main() -> int:
         for e in errs[:30]:
             print("  -", e)
         return 1
+    add_english(plans)
 
     (DATA / "plans.json").write_text(
         json.dumps(plans, ensure_ascii=False, separators=(",", ":")),
@@ -266,31 +285,61 @@ def main() -> int:
 
     themes = json.loads((DATA / "themes.json").read_text(encoding="utf-8"))
     daily = json.loads((DATA / "daily_verses.json").read_text(encoding="utf-8"))
+    i18n = json.loads((DATA / "i18n.json").read_text(encoding="utf-8"))
+    ui_en = json.loads((DATA / "ui_en.json").read_text(encoding="utf-8"))
+    ui_en.pop("_comment", None)
 
-    # --- Bible compressée : texte compact + gzip + base64 -------------------
-    # Séparateurs : \x1e entre versets, \x1d entre chapitres, \x1c entre livres.
-    compact = "\x1c".join(
-        "\x1d".join("\x1e".join(ch) for ch in b["c"]) for b in bible["books"]
-    )
-    blob = base64.b64encode(gzip.compress(compact.encode("utf-8"), 9)).decode()
-    meta = [{"a": b["a"], "n": b["n"], "t": b["t"],
-             "v": [len(c) for c in b["c"]]} for b in bible["books"]]
+    # --- Versions bibliques -------------------------------------------------
+    # Chaque version est un texte compact (séparateurs \x1e entre versets,
+    # \x1d entre chapitres, \x1c entre livres) compressé en gzip puis encodé
+    # en base64. Elles sont décompressées à la demande, jamais toutes à la fois.
+    vdir = DATA / "versions"
+    vindex = json.loads((vdir / "index.json").read_text(encoding="utf-8"))
+    books = vindex["books"]
 
-    js = (
-        "/* Données générées par data/gen_plans.py — ne pas éditer à la main. */\n"
-        f"window.BIBLE_META={json.dumps(meta, ensure_ascii=False, separators=(',', ':'))};\n"
-        f"window.BIBLE_BLOB=\"{blob}\";\n"
-        f"window.THEMES={json.dumps(themes, ensure_ascii=False, separators=(',', ':'))};\n"
-        f"window.DAILY={json.dumps(daily, ensure_ascii=False, separators=(',', ':'))};\n"
-        f"window.PLANS={json.dumps(plans, ensure_ascii=False, separators=(',', ':'))};\n"
-    )
+    versions = []
+    blobs = []
+    for v in vindex["versions"]:
+        vid = v["id"]
+        versions.append({
+            "id": vid, "nfr": v["nfr"], "nen": v["nen"], "lang": v["lang"],
+            "year": v["year"], "licence": v["licence"],
+            "v": v["v"], "map": v.get("map", {}),
+        })
+        blobs.append((vid, (vdir / f"{vid}.b64").read_text(encoding="utf-8")))
+
+    # métadonnées des livres : abréviation, nom FR, nom EN, testament
+    meta = [{"a": b["a"], "n": b["fr"], "en": b["en"], "t": b["t"]}
+            for b in books]
+
+    def j(o):
+        return json.dumps(o, ensure_ascii=False, separators=(",", ":"))
+
+    parts = [
+        "/* Données générées par data/gen_plans.py — ne pas éditer à la main. */\n",
+        f"window.BIBLE_META={j(meta)};\n",
+        f"window.VERSIONS={j(versions)};\n",
+        "window.BIBLE_BLOBS={};\n",
+    ]
+    for vid, blob in blobs:
+        parts.append(f'window.BIBLE_BLOBS["{vid}"]="{blob}";\n')
+    # compatibilité : la version par défaut reste accessible sous BIBLE_BLOB
+    parts.append('window.BIBLE_BLOB=window.BIBLE_BLOBS["LSG"];\n')
+    parts.append(f"window.I18N={j(i18n)};\n")
+    parts.append(f"window.UI_EN={j(ui_en)};\n")
+    parts.append(f"window.THEMES={j(themes)};\n")
+    parts.append(f"window.DAILY={j(daily)};\n")
+    parts.append(f"window.PLANS={j(plans)};\n")
+
     out = DATA / "embed_data.js"
-    out.write_text(js, encoding="utf-8")
+    out.write_text("".join(parts), encoding="utf-8")
 
     print(f"✅ plans   : {len(plans)}")
     for p in plans:
         print(f"   {p['i']} {p['n']:34} {p['len']:3} jours")
     print(f"✅ thèmes  : {len(themes)} · versets du jour : {len(daily)}")
+    print(f"✅ versions: {len(versions)} — "
+          + ", ".join(f"{v['id']}({v['lang']})" for v in versions))
     print(f"✅ {out.name} : {out.stat().st_size / 1e6:.2f} Mo")
     return 0
 

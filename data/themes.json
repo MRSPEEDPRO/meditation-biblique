@@ -18,7 +18,8 @@
    "ROM 1:17",
    "LUK 17:5",
    "1JN 5:4"
-  ]
+  ],
+  "ne": "Faith"
  },
  {
   "id": "amour",
@@ -39,7 +40,8 @@
    "PSA 103:11",
    "ISA 54:10",
    "JHN 15:9"
-  ]
+  ],
+  "ne": "God's love"
  },
  {
   "id": "esperance",
@@ -60,7 +62,8 @@
    "1PE 1:3",
    "PSA 42:5",
    "MIC 7:7"
-  ]
+  ],
+  "ne": "Hope"
  },
  {
   "id": "paix",
@@ -81,7 +84,8 @@
    "ROM 12:18",
    "2TH 3:16",
    "PSA 34:14"
-  ]
+  ],
+  "ne": "Peace"
  },
  {
   "id": "gratitude",
@@ -102,7 +106,8 @@
    "PSA 136:26",
    "DAN 2:23",
    "PSA 103:2"
-  ]
+  ],
+  "ne": "Gratitude"
  },
  {
   "id": "courage",
@@ -123,7 +128,8 @@
    "MRK 6:50",
    "ACT 4:31",
    "PSA 56:3"
-  ]
+  ],
+  "ne": "Courage"
  },
  {
   "id": "pardon",
@@ -144,7 +150,8 @@
    "MIC 7:18",
    "PSA 32:5",
    "HEB 8:12"
-  ]
+  ],
+  "ne": "Forgiveness"
  },
  {
   "id": "joie",
@@ -165,7 +172,8 @@
    "ISA 12:3",
    "PSA 5:11",
    "HAB 3:18"
-  ]
+  ],
+  "ne": "Joy"
  },
  {
   "id": "priere",
@@ -186,7 +194,8 @@
    "COL 4:2",
    "PSA 55:22",
    "MAT 21:22"
-  ]
+  ],
+  "ne": "Prayer"
  },
  {
   "id": "epreuve",
@@ -207,7 +216,8 @@
    "ISA 43:2",
    "JOB 23:10",
    "PSA 121:1"
-  ]
+  ],
+  "ne": "Trials"
  },
  {
   "id": "humilite",
@@ -228,7 +238,8 @@
    "PHP 2:5",
    "COL 3:12",
    "ROM 12:3"
-  ]
+  ],
+  "ne": "Humility"
  },
  {
   "id": "sagesse",
@@ -249,7 +260,8 @@
    "PRO 16:16",
    "PSA 119:105",
    "PRO 19:20"
-  ]
+  ],
+  "ne": "Wisdom"
  },
  {
   "id": "protection",
@@ -270,7 +282,8 @@
    "DEU 31:8",
    "PSA 138:7",
    "NAM 1:7"
-  ]
+  ],
+  "ne": "Protection"
  },
  {
   "id": "guerison",
@@ -291,7 +304,8 @@
    "MRK 5:34",
    "ACT 3:16",
    "PSA 41:3"
-  ]
+  ],
+  "ne": "Healing"
  },
  {
   "id": "force",
@@ -312,7 +326,8 @@
    "1CH 16:11",
    "PSA 28:8",
    "COL 1:11"
-  ]
+  ],
+  "ne": "Strength"
  },
  {
   "id": "confiance",
@@ -333,7 +348,8 @@
    "2SA 22:31",
    "PSA 143:8",
    "ISA 12:2"
-  ]
+  ],
+  "ne": "Trust"
  },
  {
   "id": "patience",
@@ -354,7 +370,8 @@
    "1CO 13:4",
    "EPH 4:2",
    "ISA 40:31"
-  ]
+  ],
+  "ne": "Patience"
  },
  {
   "id": "famille",
@@ -375,7 +392,8 @@
    "MAL 4:6",
    "ACT 16:31",
    "PRO 17:6"
-  ]
+  ],
+  "ne": "Family"
  },
  {
   "id": "provision",
@@ -396,7 +414,8 @@
    "PSA 84:11",
    "GEN 22:14",
    "PSA 145:16"
-  ]
+  ],
+  "ne": "God's provision"
  },
  {
   "id": "deuil",
@@ -417,7 +436,8 @@
    "PSA 116:15",
    "ROM 8:18",
    "JHN 14:1"
-  ]
+  ],
+  "ne": "Grief and comfort"
  },
  {
   "id": "travail",
@@ -438,7 +458,8 @@
    "ECC 9:10",
    "PRO 13:4",
    "1TH 4:11"
-  ]
+  ],
+  "ne": "Work"
  },
  {
   "id": "argent",
@@ -459,7 +480,8 @@
    "ECC 5:10",
    "2CO 9:7",
    "PSA 62:10"
-  ]
+  ],
+  "ne": "Money and contentment"
  },
  {
   "id": "identite",
@@ -480,7 +502,8 @@
    "1JN 3:2",
    "JER 1:5",
    "GAL 2:20"
-  ]
+  ],
+  "ne": "My identity in Christ"
  },
  {
   "id": "perseverance",
@@ -501,6 +524,7 @@
    "ISA 40:31",
    "2TH 3:13",
    "REV 2:10"
-  ]
+  ],
+  "ne": "Perseverance"
  }
 ]
