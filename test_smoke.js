@@ -837,8 +837,16 @@ ok(/env\(safe-area-inset-bottom/.test(html), "zone sûre iPhone prise en compte"
 
   section("36. Ma progression");
   const St = MB.state();
-  St.histo = ["2026-08-14", "2026-08-13", "2026-08-12", "2026-08-05"];
-  St.serie = { dernier: "2026-08-14", jours: 3, record: 9 };
+  // historique relatif à aujourd'hui : le calendrier affiche les 5 dernières
+  // semaines, les repères doivent donc suivre la date d'exécution.
+  const jourYmd = (n) => {
+    const d = new Date();
+    d.setDate(d.getDate() - n);
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-` +
+      `${String(d.getDate()).padStart(2, "0")}`;
+  };
+  St.histo = [jourYmd(0), jourYmd(1), jourYmd(2), jourYmd(9)];
+  St.serie = { dernier: jourYmd(0), jours: 3, record: 9 };
   const stats = MB.stats();
   eq(stats.total, 4, "jours médités comptés depuis l'historique");
   eq(stats.record, 9, "record de série repris");
@@ -859,10 +867,18 @@ ok(/env\(safe-area-inset-bottom/.test(html), "zone sûre iPhone prise en compte"
   section("37. Journal enrichi");
   const tags = MB.etiquettes();
   ok(tags.length === 6 && tags.every(t => t.id && t.ic && t.nom), "6 étiquettes proposées");
+  // dates relatives à aujourd'hui : le souvenir « il y a un an » doit tomber
+  // le même jour calendaire, quelle que soit la date d'exécution des tests.
+  const auj = new Date();
+  const isoLocal = (d, h = "09:00:00") =>
+    `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-` +
+    `${String(d.getDate()).padStart(2, "0")}T${h}`;
+  const hier = new Date(auj); hier.setDate(hier.getDate() - 1);
+  const anPasse = new Date(auj); anPasse.setFullYear(anPasse.getFullYear() - 1);
   St.notes = [
-    { id: "n1", date: "2026-08-14T09:00:00.000Z", ref: "JHN 3:16", texte: "Amour immense", tags: ["promesse"] },
-    { id: "n2", date: "2026-08-13T09:00:00.000Z", ref: "", texte: "Prière pour ma famille", tags: ["priere"] },
-    { id: "n3", date: "2025-08-14T09:00:00.000Z", ref: "PSA 23:1", texte: "Il y a un an déjà", tags: [] }
+    { id: "n1", date: isoLocal(auj), ref: "JHN 3:16", texte: "Amour immense", tags: ["promesse"] },
+    { id: "n2", date: isoLocal(hier), ref: "", texte: "Prière pour ma famille", tags: ["priere"] },
+    { id: "n3", date: isoLocal(anPasse), ref: "PSA 23:1", texte: "Il y a un an déjà", tags: [] }
   ];
   eq(MB.souvenirs().length, 1, "une note du même jour l'an dernier");
   eq(MB.souvenirs()[0].id, "n3", "le bon souvenir est retrouvé");
@@ -1040,6 +1056,101 @@ ok(/env\(safe-area-inset-bottom/.test(html), "zone sûre iPhone prise en compte"
   MB.stopLecture(true);
   if (enonces[enonces.length - 1].onend) enonces[enonces.length - 1].onend();
   window.setInterval = siOrig;
+
+  // -------------------------------------------------------------------------
+  section("41. Versions de la Bible");
+  const vers = MB.versions();
+  eq(vers.length, 9, "9 versions embarquées");
+  const ids = vers.map(v => v.id).join(",");
+  eq(ids, "LSG,DBY,OST,MAR,KJV,WEB,ASV,YLT,BBE", "identifiants et ordre des versions");
+  eq(vers.filter(v => v.lang === "fr").length, 4, "4 versions françaises");
+  eq(vers.filter(v => v.lang === "en").length, 5, "5 versions anglaises");
+  ok(vers.every(v => v.nfr && v.nen && v.year && v.licence),
+     "chaque version porte nom fr/en, année et licence");
+  eq(MB.version(), "LSG", "Louis Segond par défaut");
+
+  // --- le texte diffère bien d'une version à l'autre, et reste non vide
+  const REFS = ["GEN 1:1", "PSA 23:1", "ISA 9:5", "JHN 3:16", "ROM 8:28", "REV 22:21"];
+  ok(vers.every(v => REFS.every(r => {
+    const t = MB.verseTextIn(v.id, r);
+    return typeof t === "string" && t.length > 5;
+  })), "les 9 versions rendent un texte pour 6 références clés");
+  ok(MB.verseTextIn("KJV", "JHN 3:16") !== MB.verseTextIn("LSG", "JHN 3:16"),
+     "KJV et LSG donnent des textes différents");
+  ok(/God so loved the world/i.test(MB.verseTextIn("KJV", "JHN 3:16")),
+     "Jean 3:16 en KJV reconnaissable");
+  ok(/Dieu a tant aimé le monde/i.test(MB.verseTextIn("LSG", "JHN 3:16")),
+     "Jean 3:16 en LSG reconnaissable");
+
+  // --- versification : la numérotation LSG est convertie vers la cible
+  const m1 = MB.mapVerset("KJV", "ISA", 9, 5);
+  ok(m1 && m1.c === 9 && m1.v === 6, "Ésaïe 9:5 (LSG) → 9:6 (KJV)");
+  const m2 = MB.mapVerset("KJV", "JON", 2, 1);
+  ok(m2 && m2.c === 1 && m2.v === 17, "Jonas 2:1 (LSG) → 1:17 (KJV)");
+  const m3 = MB.mapVerset("KJV", "ECC", 4, 17);
+  ok(m3 && m3.c === 5 && m3.v === 1, "Ecclésiaste 4:17 (LSG) → 5:1 (KJV)");
+  const m4 = MB.mapVerset("LSG", "JHN", 3, 16);
+  ok(m4 && m4.c === 3 && m4.v === 16, "pas de conversion pour la version source");
+  ok(MB.mapVerset("KJV", "ISA", 9, 21) === null,
+     "verset sans équivalent dans la version cible → null");
+
+  // --- changement de version
+  MB.setVersion("KJV");
+  eq(MB.version(), "KJV", "version courante changée");
+  ok(/God so loved the world/i.test(MB.verseText("JHN 3:16")),
+     "verseText suit la version courante");
+  MB.setVersion("LSG");
+  ok(/Dieu a tant aimé le monde/i.test(MB.verseText("JHN 3:16")),
+     "retour à la Louis Segond");
+
+  // -------------------------------------------------------------------------
+  section("42. Interface bilingue");
+  eq(MB.langue(), "fr", "français par défaut");
+  const titreFr = MB.t("app.title");
+  MB.setLangue("en");
+  eq(MB.langue(), "en", "langue basculée en anglais");
+  ok(MB.t("app.title") !== titreFr, "les libellés changent avec la langue");
+  eq(document.documentElement.lang, "en", "attribut lang du document mis à jour");
+
+  // --- noms de livres traduits
+  ok(/^John\b/.test(MB.refLabel("JHN 3:16")), "référence en anglais : John 3:16");
+  MB.setLangue("fr");
+  ok(/^Jean\b/.test(MB.refLabel("JHN 3:16")), "référence en français : Jean 3:16");
+
+  // --- les vues sont traduites, sans toucher au texte biblique
+  MB.setLangue("en");
+  document.querySelector('[data-tab="plans"]').dispatchEvent(
+    new window.MouseEvent("click", { bubbles: true }));
+  const plansTxt = document.getElementById("main").textContent;
+  ok(/Reading plans/.test(plansTxt), "titre de la vue Plans traduit");
+  ok(!/Plans de lecture/.test(plansTxt), "plus de titre français dans la vue Plans");
+  ok(/The Bible in 1 year/.test(plansTxt), "nom de plan traduit");
+
+  document.querySelector('[data-tab="themes"]').dispatchEvent(
+    new window.MouseEvent("click", { bubbles: true }));
+  const themesTxt = document.getElementById("main").textContent;
+  ok(/Meditation themes/.test(themesTxt), "titre de la vue Thèmes traduit");
+  ok(/Faith/.test(themesTxt) && !/La foi/.test(themesTxt), "nom de thème traduit");
+
+  document.querySelector('[data-tab="bible"]').dispatchEvent(
+    new window.MouseEvent("click", { bubbles: true }));
+  const bibleTxt = document.getElementById("main").textContent;
+  ok(/Old Testament/.test(bibleTxt) && /New Testament/.test(bibleTxt),
+     "Ancien et Nouveau Testament traduits");
+  ok(/Genesis/.test(bibleTxt) && !/Genèse/.test(bibleTxt),
+     "noms de livres en anglais dans l'explorateur");
+
+  // --- onglets traduits
+  const onglets = [...document.querySelectorAll("nav.tabs button")]
+    .map(b => b.textContent.trim()).join(" ");
+  ok(!/Aujourd|Thèmes|Journal spirituel|Plus\b.*Bible/.test(onglets) &&
+     /Today|Themes|More/.test(onglets), "onglets traduits");
+
+  MB.setLangue("fr");
+  document.querySelector('[data-tab="plans"]').dispatchEvent(
+    new window.MouseEvent("click", { bubbles: true }));
+  ok(/Plans de lecture/.test(document.getElementById("main").textContent),
+     "retour au français dans les vues");
 
   console.log("\n" + "─".repeat(54));
   if (fail) {

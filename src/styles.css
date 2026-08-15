@@ -1122,3 +1122,75 @@ mark { background: color-mix(in srgb, var(--clay) 32%, transparent); color: inhe
   background: var(--sage-deep);
   transition: width .3s ease;
 }
+
+/* --- Versions de la Bible ------------------------------------------------ */
+
+.ver-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.ver-list .btn.sm {
+  flex: 1 1 46%;
+  justify-content: flex-start;
+  text-align: left;
+  gap: 8px;
+}
+.ver-id {
+  display: inline-block;
+  min-width: 2.6em;
+  padding: 1px 5px;
+  border-radius: 6px;
+  background: var(--sage-soft);
+  color: var(--sage-deep);
+  font-size: .72rem;
+  font-weight: 700;
+  letter-spacing: .04em;
+  text-align: center;
+}
+.btn.on .ver-id { background: var(--card); }
+
+/* comparaison des traductions */
+.cmp-lang {
+  margin: 16px 0 8px;
+  font-size: .78rem;
+  font-weight: 700;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+  color: var(--stone);
+}
+.cmp-lang:first-child { margin-top: 4px; }
+.cmp-item {
+  padding: 11px 13px;
+  margin-bottom: 8px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  background: var(--card);
+}
+.cmp-item.on {
+  border-color: var(--sage);
+  background: color-mix(in srgb, var(--sage) 7%, var(--card));
+}
+.cmp-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 6px;
+}
+.cmp-name {
+  flex: 1;
+  font-size: .8rem;
+  font-weight: 600;
+  color: var(--ink-soft);
+}
+.cmp-text {
+  margin: 0;
+  font-size: .95rem;
+  line-height: 1.55;
+}
+.btn.xs {
+  min-height: 28px;
+  padding: 0 9px;
+  font-size: .74rem;
+  border-radius: 8px;
+}

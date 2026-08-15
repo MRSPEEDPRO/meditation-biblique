@@ -1,0 +1,147 @@
+{
+ "bible-1an": {
+  "n": "The Bible in 1 year",
+  "d": "All 1,189 chapters in 365 days, about 4 a day."
+ },
+ "nt-90": {
+  "n": "New Testament in 90 days",
+  "d": "The 260 chapters of the New Testament in three months."
+ },
+ "evangiles-40": {
+  "n": "Gospels in 40 days",
+  "d": "Walking with Jesus for forty days."
+ },
+ "psaumes-30": {
+  "n": "Psalms in 30 days",
+  "d": "All 150 psalms in a month, 5 a day."
+ },
+ "proverbes-31": {
+  "n": "Proverbs in 31 days",
+  "d": "A chapter of wisdom for every day of the month."
+ },
+ "sagesse-30": {
+  "n": "Wisdom books in 30 days",
+  "d": "Job, Ecclesiastes and the Song of Solomon in a month."
+ },
+ "epitres-60": {
+  "n": "The epistles in 60 days",
+  "d": "From Romans to Revelation, the letters to the first churches."
+ },
+ "t-foi": {
+  "n": "7 days of faith",
+  "d": "A week to strengthen your trust in God.",
+  "days": [
+   "Faith, a firm assurance",
+   "Have faith in God",
+   "As small as a mustard seed",
+   "Faith comes by hearing",
+   "Ask in faith",
+   "Walk by faith",
+   "The cloud of witnesses"
+  ]
+ },
+ "t-amour": {
+  "n": "7 days in the love of God",
+  "d": "Discovering the depth of the Father's love.",
+  "days": [
+   "God so loved the world",
+   "Nothing can separate us",
+   "God is love",
+   "His compassion as a father",
+   "The father who runs",
+   "The width and the length",
+   "The greatest is love"
+  ]
+ },
+ "t-esperance": {
+  "n": "7 days of hope",
+  "d": "Lifting your head when everything seems dark.",
+  "days": [
+   "Plans for peace",
+   "New every morning",
+   "Hope does not disappoint",
+   "New strength",
+   "The glory to come",
+   "A living hope",
+   "He will wipe away every tear"
+  ]
+ },
+ "t-paix": {
+  "n": "7 days of peace",
+  "d": "Finding inner rest in the middle of the noise.",
+  "days": [
+   "My peace I give you",
+   "The peace that surpasses",
+   "Perfect peace",
+   "Beside quiet waters",
+   "You will find rest",
+   "Let peace rule",
+   "Be still, and know"
+  ]
+ },
+ "t-gratitude": {
+  "n": "7 days of gratitude",
+  "d": "Learning to give thanks in everything.",
+  "days": [
+   "Enter with praise",
+   "Give thanks in everything",
+   "Forget none of his benefits",
+   "Only one came back",
+   "With thankfulness",
+   "His mercy endures for ever",
+   "I have learned to be content"
+  ]
+ },
+ "t-courage": {
+  "n": "7 days of courage",
+  "d": "Moving forward despite fear, strengthened by God.",
+  "days": [
+   "Be strong and courageous",
+   "He will not forsake you",
+   "Whom shall I fear?",
+   "Fear not, I am with you",
+   "David before Goliath",
+   "A spirit of power",
+   "The armour of God"
+  ]
+ },
+ "t-deuil": {
+  "n": "7 days of comfort",
+  "d": "Walking through grief accompanied by God.",
+  "days": [
+   "Even in the valley",
+   "The God of all comfort",
+   "Near the broken-hearted",
+   "Jesus wept",
+   "A hope for those who sleep",
+   "A crown instead of ashes",
+   "No more mourning or crying"
+  ]
+ },
+ "t-travail": {
+  "n": "7 days on work",
+  "d": "Giving meaning to your working day.",
+  "days": [
+   "To work it and keep it",
+   "As for the Lord",
+   "Enjoy the fruit of your labour",
+   "Commit your works to the Lord",
+   "The rest of the seventh day",
+   "Work with your hands",
+   "Establish the work of our hands"
+  ]
+ },
+ "t-argent": {
+  "n": "7 days on money",
+  "d": "Putting material things back in their right place.",
+  "days": [
+   "Where your treasure is",
+   "The fool and his barns",
+   "I have learned to be content",
+   "Honour the Lord with your wealth",
+   "The root of all evil",
+   "A cheerful giver",
+   "The widow's two mites"
+  ]
+ }
+}

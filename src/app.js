@@ -1,37 +1,142 @@
 /* ==========================================================================
    Méditation Biblique — logique de l'application
    Tout fonctionne hors-ligne : aucune requête réseau n'est effectuée.
-   Données injectées par build.py : BIBLE_META, BIBLE_BLOB, THEMES, DAILY, PLANS
+   Données injectées par build.py :
+     BIBLE_META, BIBLE_BLOBS, VERSIONS, I18N, THEMES, DAILY, PLANS
    ========================================================================== */
 (function () {
   "use strict";
 
-  // --- Bible : décompression paresseuse ------------------------------------
+  // --- Langue de l'interface ------------------------------------------------
+  var I18N = window.I18N || { fr: {}, en: {} };
+  var LANGUES = ["fr", "en"];
+  var langue = "fr";        // fixé par applySettings() au démarrage
+
+  function t(cle, repli) {
+    var table = I18N[langue] || {};
+    if (table[cle] !== undefined) return table[cle];
+    if (I18N.fr && I18N.fr[cle] !== undefined) return I18N.fr[cle];
+    return repli !== undefined ? repli : cle;
+  }
+
+  // Choisit le champ français ou anglais d'un objet de contenu
+  // (thèmes et plans portent « n »/« ne », « d »/« de », « t »/« te »).
+  function loc(obj, champ) {
+    if (!obj) return "";
+    if (langue === "en" && obj[champ + "e"]) return obj[champ + "e"];
+    return obj[champ] || "";
+  }
+
+  // --- Versions de la Bible -------------------------------------------------
   var META = window.BIBLE_META || [];
-  var BOOKS = null;          // [{a,n,t,c:[[verset,...],...]}]
-  var BY_ABBR = {};
+  var VERSIONS = window.VERSIONS || [];
+  var BLOBS = window.BIBLE_BLOBS || {};
+  var VERSION_DEFAUT = "LSG";
+
+  var CACHE = {};            // {versionId: [{a,n,t,c:[[verset,...],...]}]}
+  var version = VERSION_DEFAUT;   // version courante (fixée par applySettings)
+
+  function versionInfo(id) {
+    for (var i = 0; i < VERSIONS.length; i++) {
+      if (VERSIONS[i].id === id) return VERSIONS[i];
+    }
+    return null;
+  }
+
+  function versionNom(id) {
+    var v = versionInfo(id);
+    if (!v) return id;
+    return langue === "en" ? v.nen : v.nfr;
+  }
+
+  function versionsParLangue(lg) {
+    return VERSIONS.filter(function (v) { return v.lang === lg; });
+  }
+
+  // Le nom des livres suit la langue de l'interface.
+  function nomLivre(m) {
+    return (langue === "en" && m.en) ? m.en : m.n;
+  }
 
   // Reconstruit la structure des livres à partir du texte compact décompressé.
-  function construireBible(text) {
+  function construireBible(text, id) {
     var rawBooks = text.split("\u001c");
-    BOOKS = META.map(function (m, bi) {
+    var books = META.map(function (m, bi) {
       return {
-        a: m.a, n: m.n, t: m.t,
+        a: m.a, n: nomLivre(m), t: m.t,
         c: rawBooks[bi].split("\u001d").map(function (ch) {
           return ch.split("\u001e");
         })
       };
     });
-    BOOKS.forEach(function (b) { BY_ABBR[b.a] = b; });
-    return BOOKS;
+    CACHE[id || version] = books;
+    return books;
+  }
+
+  // Décompresse une version (et la garde en mémoire).
+  function inflateVersion(id) {
+    if (CACHE[id]) return CACHE[id];
+    var blob = BLOBS[id] || BLOBS[VERSION_DEFAUT];
+    if (!blob) return null;
+    var bin = atob(blob);
+    var bytes = new Uint8Array(bin.length);
+    for (var i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+    return construireBible(window.gunzipToString(bytes), id);
   }
 
   function inflate() {
-    if (BOOKS) return BOOKS;
-    var bin = atob(window.BIBLE_BLOB);
-    var bytes = new Uint8Array(bin.length);
-    for (var i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
-    return construireBible(window.gunzipToString(bytes));
+    var b = inflateVersion(version) || inflateVersion(VERSION_DEFAUT);
+    if (b && BOOKS !== b) {
+      BOOKS = b;
+      BY_ABBR = {};
+      BOOKS.forEach(function (x) { BY_ABBR[x.a] = x; });
+    }
+    return BOOKS;
+  }
+
+  // Les vues parcourent BOOKS / BY_ABBR : on les recalcule à chaque changement
+  // de version ou de langue.
+  var BOOKS = null;
+  var BY_ABBR = {};
+
+  function actualiserBooks() {
+    BOOKS = null;
+    return inflate();
+  }
+
+  // Renomme les livres déjà en cache après un changement de langue.
+  function renommerLivres() {
+    Object.keys(CACHE).forEach(function (id) {
+      CACHE[id].forEach(function (b, bi) {
+        if (META[bi]) b.n = nomLivre(META[bi]);
+      });
+    });
+    if (BOOKS) actualiserBooks();
+  }
+
+  // --- Numérotation des versets --------------------------------------------
+  // Les traditions ne numérotent pas toujours de la même façon : le titre des
+  // psaumes compte comme verset 1 en français mais pas en anglais, « Jonas 2:1 »
+  // devient « Jonah 1:17 »… Les références de l'application sont exprimées dans
+  // la numérotation Louis Segond ; on les convertit vers la version affichée.
+  var indexLivre = {};
+  META.forEach(function (m, i) { indexLivre[m.a] = i; });
+
+  // Retourne {c, v} dans la version `id`, ou null si le verset n'existe pas.
+  function mapVerset(id, abbr, c, v) {
+    var info = versionInfo(id);
+    var bi = indexLivre[abbr];
+    if (!info || bi === undefined || !info.map) return { c: c, v: v };
+    var table = info.map[bi + "." + (c - 1)];
+    if (!table) return { c: c, v: v };
+    if (v < 1 || v > table.length) return null;
+    var e = table[v - 1];
+    if (!e) return null;
+    if (typeof e === "string") {
+      var parts = e.split(":");
+      return { c: +parts[0], v: +parts[1] };
+    }
+    return { c: c, v: e };
   }
 
   // --- Références ----------------------------------------------------------
@@ -49,7 +154,9 @@
   function bookName(abbr) {
     var b = BY_ABBR[abbr];
     if (b) return b.n;
-    for (var i = 0; i < META.length; i++) if (META[i].a === abbr) return META[i].n;
+    for (var i = 0; i < META.length; i++) {
+      if (META[i].a === abbr) return nomLivre(META[i]);
+    }
     return abbr;
   }
 
@@ -61,17 +168,31 @@
     return s;
   }
 
+  // Texte d'une référence dans une version donnée (par défaut, la courante).
+  function verseTextIn(id, ref) {
+    var books = inflateVersion(id);
+    var p = parseRef(ref);
+    if (!books || !p) return "";
+    var bi = indexLivre[p.a];
+    if (bi === undefined || !books[bi]) return "";
+    var b = books[bi];
+    if (!p.v) {
+      var ch0 = b.c[p.c - 1];
+      return ch0 ? ch0.join(" ") : "";
+    }
+    var out = [];
+    for (var v = p.v; v <= (p.v2 || p.v); v++) {
+      var m = mapVerset(id, p.a, p.c, v);
+      if (!m) continue;
+      var ch = b.c[m.c - 1];
+      if (ch && ch[m.v - 1]) out.push(ch[m.v - 1]);
+    }
+    return out.join(" ");
+  }
+
   function verseText(ref) {
     inflate();
-    var p = parseRef(ref);
-    if (!p) return "";
-    var b = BY_ABBR[p.a];
-    if (!b || !b.c[p.c - 1]) return "";
-    var ch = b.c[p.c - 1];
-    if (!p.v) return ch.join(" ");
-    var out = [];
-    for (var v = p.v; v <= (p.v2 || p.v); v++) if (ch[v - 1]) out.push(ch[v - 1]);
-    return out.join(" ");
+    return verseTextIn(version, ref);
   }
 
   // --- Stockage local ------------------------------------------------------
@@ -80,7 +201,12 @@
     favoris: [],          // ["JHN 3:16", ...]
     notes: [],            // [{id, date, ref, texte}]
     plans: {},            // {planId: {faits: [n° de jour], debut: "AAAA-MM-JJ"}}
-    reglages: { taille: 1, theme: "jour", rappel: false, vitesse: 0.9, lectureSuite: false },
+    reglages: {
+      taille: 1, theme: "jour", rappel: false, vitesse: 0.9,
+      lectureSuite: false,
+      langue: "fr",          // langue de l'interface : "fr" | "en"
+      version: "LSG"         // version biblique affichée
+    },
     perso: null,          // {mode:"suivi"|"aleatoire", livre, chapitre|null, pos, vus}
     surlignes: {},        // {"JHN 3:16": "j"|"v"|"b"|"r"}
     lecture: null,        // {a, c} dernière position de lecture
@@ -126,13 +252,23 @@
   var JOURS = ["dimanche", "lundi", "mardi", "mercredi", "jeudi", "vendredi", "samedi"];
   var MOIS = ["janvier", "février", "mars", "avril", "mai", "juin", "juillet",
               "août", "septembre", "octobre", "novembre", "décembre"];
+  var JOURS_EN = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday",
+                  "Friday", "Saturday"];
+  var MOIS_EN = ["January", "February", "March", "April", "May", "June",
+                 "July", "August", "September", "October", "November",
+                 "December"];
 
   function ymd(d) {
     return d.getFullYear() + "-" +
       String(d.getMonth() + 1).padStart(2, "0") + "-" +
       String(d.getDate()).padStart(2, "0");
   }
+  // Date en toutes lettres, dans la langue de l'interface.
   function frDate(d) {
+    if (langue === "en") {
+      return JOURS_EN[d.getDay()] + " " + d.getDate() + " " +
+        MOIS_EN[d.getMonth()] + " " + d.getFullYear();
+    }
     return JOURS[d.getDay()] + " " + d.getDate() + " " + MOIS[d.getMonth()] +
       " " + d.getFullYear();
   }
@@ -224,7 +360,7 @@
   function toast(msg) {
     var old = $(".toast");
     if (old) old.remove();
-    var t = el('<div class="toast" role="status" aria-live="polite">' + esc(msg) + "</div>");
+    var t = el('<div class="toast" role="status" aria-live="polite">' + esc(tr(msg)) + "</div>");
     document.body.appendChild(t);
     clearTimeout(toastTimer);
     toastTimer = setTimeout(function () { t.remove(); }, 2600);
@@ -237,6 +373,7 @@
       (title ? "<h3>" + esc(title) + "</h3>" : "") +
       '<div class="sheet-body"></div></div>');
     $(".sheet-body", sh).innerHTML = bodyHtml;
+    traduireArbre(sh);
     bg.appendChild(sh);
     bg.addEventListener("click", function (e) { if (e.target === bg) closeSheet(); });
     document.body.appendChild(bg);
@@ -260,7 +397,8 @@
 
   // --- Partage -------------------------------------------------------------
   function shareText(ref) {
-    return "« " + verseText(ref) + " »\n— " + refLabel(ref) + " (Louis Segond 1910)";
+    return "« " + verseText(ref) + " »\n— " + refLabel(ref) +
+      " (" + versionNom(version) + ")";
   }
 
   function shareRow(ref) {
@@ -354,7 +492,7 @@
     // pied de carte
     ctx.font = "26px system-ui, -apple-system, Segoe UI, sans-serif";
     ctx.globalAlpha = 0.75;
-    ctx.fillText("Louis Segond 1910", W / 2, H - 120);
+    ctx.fillText(versionNom(version), W / 2, H - 120);
     ctx.font = "28px system-ui, -apple-system, Segoe UI, sans-serif";
     ctx.globalAlpha = 0.9;
     ctx.fillText("🌿 Méditation Biblique", W / 2, H - 78);
@@ -426,6 +564,49 @@
         navigator.share({ files: [f], text: shareText(ref) }).catch(function () {});
       });
     });
+  }
+
+  // --- Comparaison des versions --------------------------------------------
+  // Affiche le même verset dans toutes les traductions embarquées. Chaque
+  // version est décompressée à la demande, puis conservée en mémoire.
+  function comparerSheet(ref) {
+    if (!ref) {
+      // par défaut : le verset affiché aujourd'hui
+      var inf = S.perso && S.perso.actif !== false ? persoRefFor(new Date()) : null;
+      ref = inf ? inf.ref : dailyRefFor(addDays(new Date(), -offset));
+    }
+    var sh = sheet(t("ver.compare"),
+      '<p class="muted" style="font-size:.9rem;margin:.2rem 0 .2rem">' +
+      esc(refLabel(ref)) + "</p>" +
+      '<p class="muted" style="font-size:.78rem;margin:0 0 1rem">' +
+      esc(t("ver.note.versification")) + "</p>" +
+      '<div id="cmp-list"><p class="muted">' + esc(t("misc.loading")) + "</p></div>" +
+      '<button class="btn block" style="margin-top:12px" data-close>' +
+      esc(t("act.close")) + "</button>");
+
+    // rendu différé : laisse le panneau s'ouvrir avant de décompresser
+    setTimeout(function () {
+      var box = $("#cmp-list", sh);
+      if (!box) return;
+      var h = "";
+      [["fr", t("ver.french")], ["en", t("ver.english")]].forEach(function (g) {
+        var liste = versionsParLangue(g[0]);
+        if (!liste.length) return;
+        h += '<div class="cmp-lang">' + esc(g[1]) + "</div>";
+        liste.forEach(function (v) {
+          var txt = verseTextIn(v.id, ref);
+          h += '<div class="cmp-item' + (v.id === version ? " on" : "") + '">' +
+            '<div class="cmp-head"><span class="ver-id">' + esc(v.id) + "</span>" +
+            '<span class="cmp-name">' + esc(langue === "en" ? v.nen : v.nfr) + "</span>" +
+            '<button class="btn xs" data-copy="' + esc(txt) + '">' +
+            esc(t("act.copy")) + "</button></div>" +
+            '<p class="cmp-text">' + (txt ? esc(txt) : "—") + "</p></div>";
+        });
+      });
+      box.innerHTML = h;
+      traduireArbre(box);
+    }, 30);
+    return sh;
   }
 
   function openShare(ref) {
@@ -867,13 +1048,18 @@
 
   // étiquettes proposées pour classer les notes
   var ETIQUETTES = [
-    { id: "promesse", ic: "🌈", nom: "Promesse" },
-    { id: "priere", ic: "🙏", nom: "Prière" },
-    { id: "exauce", ic: "✅", nom: "Exaucé" },
-    { id: "retenir", ic: "💡", nom: "À retenir" },
-    { id: "epreuve", ic: "🌧", nom: "Épreuve" },
-    { id: "gratitude", ic: "💛", nom: "Gratitude" }
+    { id: "promesse", ic: "🌈", nom: "Promesse", en: "Promise" },
+    { id: "priere", ic: "🙏", nom: "Prière", en: "Prayer" },
+    { id: "exauce", ic: "✅", nom: "Exaucé", en: "Answered" },
+    { id: "retenir", ic: "💡", nom: "À retenir", en: "To remember" },
+    { id: "epreuve", ic: "🌧", nom: "Épreuve", en: "Trial" },
+    { id: "gratitude", ic: "💛", nom: "Gratitude", en: "Gratitude" }
   ];
+
+  // Nom d'une étiquette dans la langue courante.
+  function etiquetteNom(e) {
+    return (langue === "en" && e && e.en) ? e.en : (e ? e.nom : "");
+  }
 
   function etiquette(id) {
     for (var i = 0; i < ETIQUETTES.length; i++) if (ETIQUETTES[i].id === id) return ETIQUETTES[i];
@@ -891,7 +1077,7 @@
     var chips = '<div class="tagpick">';
     ETIQUETTES.forEach(function (t) {
       chips += '<button type="button" class="tagc' + (tags.indexOf(t.id) !== -1 ? " on" : "") +
-        '" data-tag="' + t.id + '">' + t.ic + " " + esc(t.nom) + "</button>";
+        '" data-tag="' + t.id + '">' + t.ic + " " + esc(etiquetteNom(t)) + "</button>";
     });
     chips += "</div>";
 
@@ -989,6 +1175,7 @@
       "Vos données ne quittent jamais cet appareil.</p>";
     h += "</div>";
     el.innerHTML = h;
+    traduireArbre(el);
     document.body.appendChild(el);
 
     var nom = el.querySelector("#onb-nom");
@@ -1222,6 +1409,7 @@
           (cur.chapitre === i && b.a === cur.livre ? " selected" : "") + ">Chapitre " + i + "</option>";
       }
       $("#p-chap", sh).innerHTML = o;
+      traduireArbre($("#p-chap", sh));
     }
     $("#p-book", sh).addEventListener("change", fillChap);
     fillChap();
@@ -1380,8 +1568,8 @@
       h += '<div style="display:flex;gap:12px;align-items:flex-start">';
       h += '<span style="font-size:1.6rem;line-height:1">' + p.i + "</span>";
       h += '<div style="flex:1;min-width:0">';
-      h += '<div class="ttl" style="font-weight:600">' + esc(p.n) + "</div>";
-      h += '<div class="muted" style="font-size:.85rem;margin:2px 0 0">' + esc(p.d) + "</div>";
+      h += '<div class="ttl" style="font-weight:600">' + esc(loc(p, "n")) + "</div>";
+      h += '<div class="muted" style="font-size:.85rem;margin:2px 0 0">' + esc(loc(p, "d")) + "</div>";
       h += '<div class="bar"><i style="width:' + pct + '%"></i></div>';
       h += '<div class="muted" style="font-size:.78rem;margin-top:5px">' +
         done + " / " + p.len + " jours · " + pct + "%</div>";
@@ -1401,7 +1589,7 @@
       var pct = Math.round(done / p.len * 100);
       var next = 0;
       for (var i = 0; i < p.len; i++) if (st.faits.indexOf(i) === -1) { next = i; break; }
-      var h = '<p class="muted" style="font-size:.9rem;margin:.2rem 0 .6rem">' + esc(p.d) + "</p>";
+      var h = '<p class="muted" style="font-size:.9rem;margin:.2rem 0 .6rem">' + esc(loc(p, "d")) + "</p>";
       h += '<div class="bar"><i style="width:' + pct + '%"></i></div>';
       h += '<div class="muted" style="font-size:.8rem;margin:6px 0 14px">' +
         done + " / " + p.len + " jours · " + pct + "%</div>";
@@ -1415,14 +1603,14 @@
           (ok ? "✅" : "⬜") + "</button>";
         h += '<button class="grow" style="text-align:left;background:none" data-goday="' + i + '">' +
           '<div class="ttl">Jour ' + (i + 1) + "</div>" +
-          '<div class="meta">' + esc(d.t) + "</div></button>";
+          '<div class="meta">' + esc(loc(d, "t")) + "</div></button>";
         h += '<span class="chev">›</span></div>';
       });
       h += "</div>";
       return h;
     }
 
-    var sh = sheet(p.i + " " + p.n, body());
+    var sh = sheet(p.i + " " + loc(p, "n"), body());
 
     sh.addEventListener("click", function (e) {
       var t = e.target.closest("[data-tog],[data-goday],[data-reset]");
@@ -1433,12 +1621,14 @@
         if (k === -1) { st.faits.push(i); touchStreak(); } else st.faits.splice(k, 1);
         save();
         $(".sheet-body", sh).innerHTML = body();
+        traduireArbre(sh);
       } else if (t.hasAttribute("data-goday")) {
         readDay(p, +t.dataset.goday, st);
       } else if (t.hasAttribute("data-reset")) {
         st.faits = [];
         save();
         $(".sheet-body", sh).innerHTML = body();
+        traduireArbre(sh);
         toast("Plan réinitialisé");
       }
     });
@@ -1494,7 +1684,7 @@
     T.forEach(function (t) {
       h += '<button class="tile" data-theme="' + t.id + '">' +
         '<span class="ic">' + t.i + "</span>" +
-        '<span class="lb">' + esc(t.n) + "</span>" +
+        '<span class="lb">' + esc(loc(t, "n")) + "</span>" +
         '<span class="sub">' + t.v.length + " versets</span></button>";
     });
     h += "</div>";
@@ -1517,7 +1707,7 @@
         '<button class="btn sm" data-note="' + ref + '">✍️</button>' +
         '<button class="btn sm" data-share="' + ref + '">↗</button></div></div>';
     });
-    sheet(t.i + " " + t.n, h);
+    sheet(t.i + " " + loc(t, "n"), h);
   }
 
   // --- Ma progression ------------------------------------------------------
@@ -1678,14 +1868,15 @@
   function noteHtml(n) {
     var d = new Date(n.date);
     var h = '<div class="note"><div class="nd">' + esc(frDate(d)) + " · " +
-      String(d.getHours()).padStart(2, "0") + "h" + String(d.getMinutes()).padStart(2, "0") + "</div>";
+      String(d.getHours()).padStart(2, "0") + (langue === "en" ? ":" : "h") +
+      String(d.getMinutes()).padStart(2, "0") + "</div>";
     if (n.ref) h += '<div class="nr">' + esc(refLabel(n.ref)) + "</div>";
     h += '<div class="nt">' + esc(n.texte) + "</div>";
     if (n.tags && n.tags.length) {
       h += '<div class="ntags">';
       n.tags.forEach(function (id) {
         var t = etiquette(id);
-        if (t) h += '<span class="tagc on sm">' + t.ic + " " + esc(t.nom) + "</span>";
+        if (t) h += '<span class="tagc on sm">' + t.ic + " " + esc(etiquetteNom(t)) + "</span>";
       });
       h += "</div>";
     }
@@ -1739,7 +1930,7 @@
       h += '<button type="button" class="tagc' + (JF.tag ? "" : " on") + '" data-jtag="">Toutes</button>';
       utilisees.forEach(function (t) {
         h += '<button type="button" class="tagc' + (JF.tag === t.id ? " on" : "") +
-          '" data-jtag="' + t.id + '">' + t.ic + " " + esc(t.nom) + " (" + compte[t.id] + ")</button>";
+          '" data-jtag="' + t.id + '">' + t.ic + " " + esc(etiquetteNom(t)) + " (" + compte[t.id] + ")</button>";
       });
       h += "</div>";
     }
@@ -1776,7 +1967,7 @@
         lines.push("");
         lines.push("Étiquettes : " + n.tags.map(function (id) {
           var t = etiquette(id);
-          return t ? t.nom : id;
+          return t ? etiquetteNom(t) : id;
         }).join(", "));
       }
       lines.push("");
@@ -1899,9 +2090,9 @@
       b.addEventListener("click", function () {
         mode = b.dataset.imp;
         $$("[data-imp]").forEach(function (o) { o.classList.toggle("on", o === b); });
-        $("#imp-help").textContent = mode === "fusion"
+        $("#imp-help").textContent = tr(mode === "fusion"
           ? "Fusionner : ajoute les notes, favoris et progressions manquants, sans rien supprimer."
-          : "Remplacer : efface les données de cet appareil et installe celles du fichier.";
+          : "Remplacer : efface les données de cet appareil et installe celles du fichier.");
       });
     });
 
@@ -1928,7 +2119,8 @@
   function viewBible() {
     inflate();
     var h = '<h2 class="section-h">La Bible</h2>' +
-      '<p class="section-sub">Louis Segond 1910 · 66 livres · 1 189 chapitres</p>';
+      '<p class="section-sub">' + esc(versionNom(version)) + " · 66 " +
+      esc(t("misc.books")) + " · 1 189 " + esc(t("misc.chapters")) + "</p>";
     h += '<input class="field" id="q" placeholder="🔍 Rechercher un mot, plusieurs mots, ou « Jean 3:16 »…" ' +
       'autocomplete="off" style="margin-bottom:6px">' +
       '<p class="muted" style="font-size:.78rem;margin:0 0 14px">' +
@@ -2073,6 +2265,7 @@
     if (!res.length) {
       box.innerHTML = h + '<div class="empty"><span class="ic">🔍</span>Aucun résultat pour « ' +
         esc(q) + " »" + (QF.portee !== "tout" ? " dans cette partie de la Bible" : "") + ".</div>";
+      traduireArbre(box);
       brancherFiltres(q);
       return;
     }
@@ -2097,6 +2290,7 @@
         '<button class="btn sm" data-share="' + r.ref + '">↗</button></div></div>';
     });
     box.innerHTML = h;
+    traduireArbre(box);
     brancherFiltres(q);
   }
 
@@ -2145,6 +2339,7 @@
       '<div class="reader-body" id="rd-body"><div class="reader-inner" id="rd-inner"></div></div>' +
       "</div>");
     document.body.appendChild(r);
+    traduireArbre(r);
     document.body.style.overflow = "hidden";
 
     r.addEventListener("click", function (e) {
@@ -2189,7 +2384,8 @@
     $("#rd-name").textContent = b.n + " " + RD.c;
 
     var h = '<h1 class="reader-h">' + esc(b.n) + " " + RD.c + "</h1>";
-    h += '<p class="reader-sub">Louis Segond 1910 · ' + ch.length + " versets</p>";
+    h += '<p class="reader-sub">' + esc(versionNom(version)) + " · " +
+      ch.length + " " + esc(t("misc.verses")) + "</p>";
     h += '<div class="prose' + (S.proseLignes ? " lines" : "") + '" id="rd-prose">';
     ch.forEach(function (t, i) {
       var n = i + 1;
@@ -2206,6 +2402,7 @@
     h += "</div>";
 
     $("#rd-inner").innerHTML = h;
+    traduireArbre($("#rd-inner"));
     $("#rd-body").scrollTop = 0;
     RD.sel = [];
     renderSelbar();
@@ -2264,6 +2461,7 @@
           (c ? "Surligner" : "Retirer le surlignage") + '"></button>';
       }).join("") +
       "</div></div>");
+    traduireArbre(bar);
     document.body.appendChild(bar);
     bar.addEventListener("click", function (e) {
       var sw = e.target.closest(".hl-sw");
@@ -2327,6 +2525,7 @@
         h += "</div>";
       }
       $("#pk-body", sh).innerHTML = h;
+      traduireArbre($("#pk-body", sh));
     }
 
     sh.addEventListener("click", function (e) {
@@ -2425,9 +2624,42 @@
     });
     h += "</div>";
 
-    h += '<div class="card"><div class="card-title">⚙️ Réglages</div>';
-    h += '<label class="lbl">Taille du texte</label><div style="display:flex;gap:8px">';
-    [["Petit", 0.9], ["Normal", 1], ["Grand", 1.15], ["Très grand", 1.3]].forEach(function (t) {
+    // --- Bible : langue de l'interface et version affichée -----------------
+    h += '<div class="card"><div class="card-title">📖 ' + esc(t("set.version")) + "</div>";
+    h += '<label class="lbl">' + esc(t("set.language")) + '</label>' +
+      '<div style="display:flex;gap:8px">' +
+      '<button class="btn sm' + (langue === "fr" ? " on" : "") +
+      '" style="flex:1" data-lang="fr">🇫🇷 Français</button>' +
+      '<button class="btn sm' + (langue === "en" ? " on" : "") +
+      '" style="flex:1" data-lang="en">🇬🇧 English</button></div>';
+
+    h += '<p class="muted" style="font-size:.8rem;margin:12px 0 6px">' +
+      esc(t("set.version.sub")) + "</p>";
+    [["fr", t("ver.french")], ["en", t("ver.english")]].forEach(function (g) {
+      var liste = versionsParLangue(g[0]);
+      if (!liste.length) return;
+      h += '<label class="lbl">' + esc(g[1]) + "</label>" +
+        '<div class="ver-list">';
+      liste.forEach(function (v) {
+        h += '<button class="btn sm ver-pick' + (version === v.id ? " on" : "") +
+          '" data-ver="' + esc(v.id) + '">' +
+          '<span class="ver-id">' + esc(v.id) + "</span> " +
+          esc(langue === "en" ? v.nen : v.nfr) + "</button>";
+      });
+      h += "</div>";
+    });
+    h += '<button class="btn sm block" id="ver-compare" style="margin-top:12px">⚖️ ' +
+      esc(t("ver.compare")) + "</button>";
+    h += '<p class="muted" style="font-size:.78rem;margin:10px 0 0">' +
+      esc(t("ver.note.versification")) + "</p>";
+    h += "</div>";
+
+    h += '<div class="card"><div class="card-title">⚙️ ' + esc(t("plus.settings")) + "</div>";
+    h += '<label class="lbl">' + esc(t("set.textsize")) + '</label><div style="display:flex;gap:8px">';
+    var TAILLES = langue === "en"
+      ? [["Small", 0.9], ["Normal", 1], ["Large", 1.15], ["Very large", 1.3]]
+      : [["Petit", 0.9], ["Normal", 1], ["Grand", 1.15], ["Très grand", 1.3]];
+    TAILLES.forEach(function (t) {
       h += '<button class="btn sm' + (S.reglages.taille === t[1] ? " on" : "") +
         '" style="flex:1" data-size="' + t[1] + '">' + t[0] + "</button>";
     });
@@ -2475,7 +2707,8 @@
     h += '<div class="card center"><div style="font-size:1.8rem">🌿</div>' +
       '<p style="margin:6px 0 2px;font-weight:600">Méditation Biblique</p>' +
       '<p class="muted" style="font-size:.84rem;margin:0">Version 1.5.0 · fonctionne hors-ligne</p>' +
-      '<p class="muted" style="font-size:.8rem;margin:10px 0 0">Texte : Louis Segond 1910, domaine public.<br>' +
+      '<p class="muted" style="font-size:.8rem;margin:10px 0 0">Texte : ' +
+      esc(versionNom(version)) + ", " + esc(versionInfo(version) ? versionInfo(version).licence : "") + ".<br>" +
       "Vos données ne quittent jamais cet appareil.</p></div>";
     return h;
   }
@@ -2495,6 +2728,7 @@
   function render() {
     var main = $("#main");
     main.innerHTML = VIEWS[current]();
+    traduireArbre(main);
     $$("nav.tabs button").forEach(function (b) {
       b.setAttribute("aria-selected", b.dataset.tab === current ? "true" : "false");
     });
@@ -2546,6 +2780,152 @@
     document.documentElement.setAttribute("data-theme", eff);
     var mt = $('meta[name="theme-color"]');
     if (mt) mt.setAttribute("content", eff === "nuit" ? "#161a17" : "#faf8f3");
+
+    // langue et version : on valide les valeurs enregistrées
+    if (LANGUES.indexOf(S.reglages.langue) === -1) S.reglages.langue = "fr";
+    if (!versionInfo(S.reglages.version)) S.reglages.version = VERSION_DEFAUT;
+    langue = S.reglages.langue;
+    version = S.reglages.version;
+    appliquerLangueDocument();
+  }
+
+  // --- Traduction de l'interface -------------------------------------------
+  // Les vues sont écrites en français ; quand la langue est « en », on traduit
+  // les libellés au moment du rendu. On ne touche jamais au texte biblique :
+  // les éléments qui le portent sont exclus (.verse-text, .prose, .v…).
+  var UI_EN = window.UI_EN || { exact: {}, patterns: [] };
+  var UI_RE = null;
+
+  function motifs() {
+    if (!UI_RE) {
+      UI_RE = (UI_EN.patterns || []).map(function (p) {
+        return [new RegExp(p[0]), p[1]];
+      });
+    }
+    return UI_RE;
+  }
+
+  // Marqueur « mot|s » : le « s » n'est gardé que si le nombre qui précède
+  // vaut autre chose que 1 (l'anglais accorde là où le français ne le fait pas).
+  function pluriel(s) {
+    if (s.indexOf("|") === -1) return s;
+    return s.replace(/(\d[\d\s,.]*)?(\s*)([A-Za-z]+)\|s/g,
+      function (m, nb, esp, mot) {
+        var n = nb ? parseFloat(String(nb).replace(/[\s,]/g, "")) : 0;
+        return (nb || "") + (esp || "") + mot + (n === 1 ? "" : "s");
+      });
+  }
+
+  // Traduit un libellé isolé (retourne la chaîne d'origine si inconnue).
+  function tr(s) {
+    if (langue !== "en" || !s) return s;
+    var brut = String(s);
+    var noyau = brut.trim();
+    if (!noyau) return brut;
+    var table = UI_EN.exact || {};
+    var out = null;
+    if (table[noyau] !== undefined) {
+      out = table[noyau];
+    } else {
+      var re = motifs();
+      for (var i = 0; i < re.length; i++) {
+        if (re[i][0].test(noyau)) {
+          out = noyau.replace(re[i][0], re[i][1]);
+          break;
+        }
+      }
+    }
+    if (out === null) return brut;
+    out = pluriel(out);
+    // on conserve les espaces qui entouraient le libellé
+    var avant = brut.match(/^\s*/)[0];
+    var apres = brut.match(/\s*$/)[0];
+    return avant + out + apres;
+  }
+
+  // Éléments dont le contenu est du texte biblique ou saisi par l'utilisateur.
+  var SANS_TRAD = ".verse-text,.prose,.cmp-text,.vt,.ntext,.note-texte," +
+    "textarea,input,script,style,[data-notr]";
+
+  function traduireArbre(racine) {
+    if (langue !== "en" || !racine) return;
+    var doc = racine.ownerDocument || document;
+    if (!doc.createTreeWalker) return;
+    var w = doc.createTreeWalker(racine, 4 /* SHOW_TEXT */, null, false);
+    var lot = [];
+    var n;
+    while ((n = w.nextNode())) lot.push(n);
+    lot.forEach(function (noeud) {
+      var s = noeud.textContent;
+      if (!s || !s.trim()) return;
+      var p = noeud.parentElement;
+      if (p && p.closest && p.closest(SANS_TRAD)) return;
+      var t2 = tr(s);
+      if (t2 !== s) noeud.textContent = t2;
+    });
+    // libellés portés par des attributs
+    var attrs = ["placeholder", "aria-label", "title"];
+    var els = racine.querySelectorAll ? racine.querySelectorAll("[placeholder],[aria-label],[title]") : [];
+    Array.prototype.forEach.call(els, function (e) {
+      attrs.forEach(function (a) {
+        var v = e.getAttribute(a);
+        if (v) {
+          var t3 = tr(v);
+          if (t3 !== v) e.setAttribute(a, t3);
+        }
+      });
+    });
+  }
+
+  // Traduit le squelette HTML (onglets, en-tête) et l'attribut lang.
+  function appliquerLangueDocument() {
+    document.documentElement.setAttribute("lang", langue);
+    var titre = $(".brand");
+    if (titre) titre.innerHTML = '<span class="leaf">🌿</span> ' + esc(t("app.title"));
+    $$("nav.tabs button").forEach(function (b) {
+      var cle = "tab." + b.dataset.tab;
+      var ic = b.querySelector(".ic");
+      b.innerHTML = (ic ? ic.outerHTML : "") + esc(t(cle));
+    });
+    var dk = $("#dark-toggle");
+    if (dk) {
+      dk.setAttribute("aria-label", t("set.theme"));
+      dk.setAttribute("title", t("set.theme"));
+    }
+  }
+
+  // Change la version affichée : on décompresse à la demande puis on redessine.
+  function changerVersion(id) {
+    if (!versionInfo(id) || id === version) return;
+    S.reglages.version = id;
+    version = id;
+    save();
+    actualiserBooks();
+    stopLecture(true);
+    render();
+    toast(t("ver.changed") + " · " + versionNom(id));
+  }
+
+  // Change la langue de l'interface (et bascule vers une version de cette
+  // langue si l'utilisateur n'en a pas choisi une explicitement).
+  function changerLangue(lg) {
+    if (LANGUES.indexOf(lg) === -1 || lg === langue) return;
+    S.reglages.langue = lg;
+    langue = lg;
+    var info = versionInfo(version);
+    if (!info || info.lang !== lg) {
+      var dispo = versionsParLangue(lg);
+      if (dispo.length) {
+        version = dispo[0].id;
+        S.reglages.version = version;
+      }
+    }
+    save();
+    renommerLivres();
+    actualiserBooks();
+    stopLecture(true);
+    appliquerLangueDocument();
+    render();
   }
 
   // en mode auto, on réagit au changement système sans recharger
@@ -2565,7 +2945,8 @@
     if (e.target.closest("#prof-edit")) { profilSheet(); return; }
     var t = e.target.closest("[data-tab],[data-fav],[data-note],[data-share],[data-speak]," +
       "[data-copy],[data-close],[data-plan],[data-theme],[data-book],[data-open],[data-carte]," +
-      "[data-off],[data-size],[data-mode2],[data-ndel],[data-nedit],[data-pstep],[data-pmode],[data-read]");
+      "[data-off],[data-size],[data-mode2],[data-ndel],[data-nedit],[data-pstep],[data-pmode],[data-read]," +
+      "[data-lang],[data-ver],[data-cmp]");
     if (!t) return;
 
     if (t.hasAttribute("data-tab")) {
@@ -2609,6 +2990,12 @@
       var d = +t.dataset.off;
       offset = d === 0 ? 0 : Math.max(0, offset + d);
       render();
+    } else if (t.hasAttribute("data-lang")) {
+      changerLangue(t.dataset.lang);
+    } else if (t.hasAttribute("data-ver")) {
+      changerVersion(t.dataset.ver);
+    } else if (t.hasAttribute("data-cmp")) {
+      comparerSheet(t.dataset.cmp);
     } else if (t.hasAttribute("data-size")) {
       S.reglages.taille = +t.dataset.size;
       save();
@@ -2656,6 +3043,7 @@
     if (e.target.closest("#pwa-install")) lancerInstallation();
     if (e.target.closest("#rap-on")) demanderRappel();
     if (e.target.closest("#rap-off")) couperRappel();
+    if (e.target.closest("#ver-compare")) comparerSheet(null);
     if (e.target.closest("#bkexport")) exportSauvegarde();
     if (e.target.closest("#bkimport")) importSauvegardeSheet();
     if (e.target.closest("#perso-edit")) persoSheet();
@@ -2722,7 +3110,7 @@
     return {
       name: "Méditation Biblique",
       short_name: "Méditation",
-      description: "Verset du jour, plans de lecture et journal spirituel — Louis Segond 1910, hors-ligne.",
+      description: "Verset du jour, plans de lecture et journal spirituel — 9 versions bibliques, hors-ligne.",
       lang: "fr",
       start_url: ".",
       scope: ".",
@@ -2787,9 +3175,10 @@
   // pendant que les 31 170 versets sont décompressés en arrière-plan.
   // Si les workers ne sont pas disponibles (file:// sur certains navigateurs,
   // jsdom…), on retombe simplement sur la décompression synchrone.
-  function inflateAsync(onProgress) {
+  function inflateAsync(onProgress, id) {
+    id = id || version;
     return new Promise(function (resolve, reject) {
-      if (BOOKS) { resolve(BOOKS); return; }
+      if (CACHE[id]) { resolve(CACHE[id]); return; }
       var src = $("#inflate-src");
       if (typeof window.Worker !== "function" || typeof URL.createObjectURL !== "function" || !src) {
         reject(new Error("worker indisponible"));
@@ -2822,7 +3211,7 @@
         URL.revokeObjectURL(url);
         if (!ev.data || !ev.data.ok) { reject(new Error(ev.data ? ev.data.erreur : "échec")); return; }
         if (onProgress) onProgress(0.85);
-        resolve(construireBible(ev.data.texte));
+        resolve(construireBible(ev.data.texte, id));
       };
       w.onerror = function (e) {
         if (fini) return;
@@ -2834,7 +3223,7 @@
       };
 
       if (onProgress) onProgress(0.25);
-      var bin = atob(window.BIBLE_BLOB);
+      var bin = atob(BLOBS[id] || BLOBS[VERSION_DEFAUT]);
       var bytes = new Uint8Array(bin.length);
       for (var i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
       if (onProgress) onProgress(0.45);
@@ -2871,20 +3260,23 @@
     var l = $("#loader");
     if (l) {
       l.innerHTML = '<div class="empty"><span class="ic">⚠️</span>' +
-        "Impossible de charger la Bible.<br><small>" + esc(String(err)) + "</small></div>";
+        esc(t("app.loadfail")) + "<br><small>" + esc(String(err)) + "</small></div>";
     }
   }
 
   function boot() {
     applySettings();
     progression(0.1);
+    var lp = $("#loader p");
+    if (lp) lp.textContent = t("app.loading");
     inflateAsync(progression).then(function () {
       progression(1);
+      actualiserBooks();
       demarrer();
     }).catch(function () {
       // repli synchrone : identique au comportement d'origine
       try {
-        inflate();
+        actualiserBooks();
       } catch (err) {
         echecChargement(err);
         return;
@@ -2922,6 +3314,16 @@
     themeEffectif: themeEffectif,
     manifest: manifestJSON,
     dessinerCarte: dessinerCarte,
-    backupTag: BACKUP_TAG
+    backupTag: BACKUP_TAG,
+    // versions et langues
+    versions: function () { return VERSIONS; },
+    version: function () { return version; },
+    setVersion: changerVersion,
+    langue: function () { return langue; },
+    setLangue: changerLangue,
+    verseTextIn: verseTextIn,
+    mapVerset: mapVerset,
+    t: t,
+    comparerSheet: comparerSheet
   };
 })();

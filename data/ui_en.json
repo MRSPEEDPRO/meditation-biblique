@@ -1,0 +1,377 @@
+{
+  "_comment": "Traduction anglaise des libellés de l'interface. Les clés sont les chaînes françaises telles qu'elles apparaissent à l'écran ; app.js les remplace au rendu quand la langue est « en ». Les motifs contenant {n} acceptent un nombre.",
+  "exact": {
+    "Méditation Biblique": "Bible Meditation",
+    "Aujourd'hui": "Today",
+    "Ma médit.": "My medit.",
+    "Plans": "Plans",
+    "Thèmes": "Themes",
+    "Bible": "Bible",
+    "Journal": "Journal",
+    "Plus": "More",
+    "🔊 Écouter": "🔊 Listen",
+    "☆ Favori": "☆ Favourite",
+    "★ Favori": "★ Favourite",
+    "✍️ Noter": "✍️ Note",
+    "↗ Partager": "↗ Share",
+    "← Jour précédent": "← Previous day",
+    "Jour suivant →": "Next day →",
+    "Aujourd'hui →": "Today →",
+    "Que ce verset éclaire votre journée.": "May this verse light up your day.",
+    "🎯 Ma méditation": "🎯 My meditation",
+    "Ma méditation": "My meditation",
+    "Choisissez un livre ou un chapitre : chaque jour, votre verset en sera tiré.": "Choose a book or a chapter: each day your verse will be drawn from it.",
+    "Choisissez un passage : chaque jour, votre verset en sera tiré.": "Choose a passage: each day your verse will be drawn from it.",
+    "Créer ma méditation": "Create my meditation",
+    "Aucune méditation en cours.": "No meditation in progress.",
+    "Un chapitre, un livre entier — à votre rythme.": "A chapter, a whole book — at your own pace.",
+    "Comment ça marche": "How it works",
+    "Suivi": "Sequential",
+    "Aléatoire": "Random",
+    "Les versets défilent": "The verses go by",
+    "dans l'ordre": "in order",
+    ", un par jour. Arrivé au bout du passage, la lecture": ", one a day. At the end of the passage, reading",
+    "recommence": "starts again",
+    "pour un nouveau cycle.": "for a new cycle.",
+    "Un verset": "A",
+    "surprise": "surprise verse",
+    "chaque jour, jamais celui de la veille. Vos": "every day, never yesterday's. Your",
+    "découvertes": "discoveries",
+    "sont comptabilisées au fil du temps.": "are counted over time.",
+    "📆 Suivi": "📆 Sequential",
+    "🎲 Aléatoire": "🎲 Random",
+    "🎲 Un autre verset": "🎲 Another verse",
+    "Voir le verset du jour général": "See the general verse of the day",
+    "Activer ma méditation": "Turn on my meditation",
+    "Modifier mon passage": "Change my passage",
+    "← Verset précédent": "← Previous verse",
+    "Verset suivant →": "Next verse →",
+    "🔥 Ma régularité": "🔥 My consistency",
+    "jours d'affilée": "days in a row",
+    "jour d'affilée": "day in a row",
+    "record": "record",
+    "jours médités": "days meditated",
+    "jour médité": "day meditated",
+    "record de série": "streak record",
+    "note écrite": "note written",
+    "notes écrites": "notes written",
+    "Plans de lecture": "Reading plans",
+    "Votre progression est enregistrée sur cet appareil.": "Your progress is saved on this device.",
+    "Thèmes de méditation": "Meditation themes",
+    "La Bible": "The Bible",
+    "Journal de méditation": "Meditation journal",
+    "Vos notes restent sur cet appareil, rien n'est envoyé sur Internet.": "Your notes stay on this device, nothing is sent over the internet.",
+    "✍️ Nouvelle note": "✍️ New note",
+    "⬇ Exporter": "⬇ Export",
+    "Toutes": "All",
+    "Ouvrir": "Open",
+    "Modifier": "Edit",
+    "Supprimer": "Delete",
+    "Retirer": "Remove",
+    "Annuler": "Cancel",
+    "Enregistrer": "Save",
+    "Fermer": "Close",
+    "Copier": "Copy",
+    "Partager": "Share",
+    "Aucune note pour l'instant.": "No notes yet.",
+    "Vos méditations écrites apparaîtront ici.": "Your written meditations will appear here.",
+    "Il y a un an, jour pour jour": "One year ago today",
+    "Ancien Testament": "Old Testament",
+    "Nouveau Testament": "New Testament",
+    "Plusieurs mots : seuls les versets qui les contiennent tous sont affichés. Une référence ouvre directement le passage.": "Several words: only verses containing all of them are shown. A reference opens the passage directly.",
+    "Rechercher un mot, une expression, une référence…": "Search for a word, a phrase, a reference…",
+    "Tout": "All",
+    "AT": "OT",
+    "NT": "NT",
+    "Aucun résultat.": "No result.",
+    "Essayez un autre mot ou une référence (« Jean 3:16 »).": "Try another word or a reference (“John 3:16”).",
+    "Profil, favoris, guide et réglages.": "Profile, favourites, guide and settings.",
+    "👤 Mon profil": "👤 My profile",
+    "📈 Ma progression": "📈 My progress",
+    "Ma progression": "My progress",
+    "Votre chemin de méditation, jour après jour.": "Your meditation journey, day after day.",
+    "🕯️ Guide de méditation en 5 étapes": "🕯️ Meditation guide in 5 steps",
+    "Se préparer": "Prepare",
+    "Trouvez un lieu calme. Respirez lentement. Demandez à Dieu d'ouvrir votre cœur avant de lire.": "Find a quiet place. Breathe slowly. Ask God to open your heart before you read.",
+    "Lire lentement": "Read slowly",
+    "Lisez le verset à voix haute, deux ou trois fois. Ne vous pressez pas : laissez les mots se poser.": "Read the verse aloud, two or three times. Don't rush: let the words settle.",
+    "Observer": "Observe",
+    "Que dit ce texte de Dieu ? De l'homme ? Y a-t-il une promesse, un ordre, un exemple à suivre ?": "What does this text say about God? About people? Is there a promise, a command, an example to follow?",
+    "Appliquer": "Apply",
+    "Qu'est-ce que cela change pour ma journée ? Choisissez une seule chose concrète à vivre aujourd'hui.": "What does this change for my day? Choose one concrete thing to live out today.",
+    "Prier": "Pray",
+    "Répondez à Dieu avec vos propres mots : remerciez, demandez, confiez. Puis notez ce que vous retenez.": "Answer God in your own words: give thanks, ask, entrust. Then write down what you take away.",
+    "📖 Version de la Bible": "📖 Bible version",
+    "Langue de l'application": "App language",
+    "Le texte affiché, lu et partagé.": "The text shown, read aloud and shared.",
+    "Français": "Français",
+    "English": "English",
+    "⚖️ Comparer les versions": "⚖️ Compare versions",
+    "Comparer les versions": "Compare versions",
+    "La numérotation des versets diffère parfois entre traditions ; la référence est adaptée automatiquement.": "Verse numbering sometimes differs between traditions; the reference is adjusted automatically.",
+    "⚙️ Réglages": "⚙️ Settings",
+    "Réglages": "Settings",
+    "Taille du texte": "Text size",
+    "Petit": "Small",
+    "Normal": "Normal",
+    "Grand": "Large",
+    "Très grand": "Very large",
+    "Apparence": "Appearance",
+    "☀️ Jour": "☀️ Day",
+    "🌙 Nuit": "🌙 Night",
+    "📱 Auto": "📱 Auto",
+    "Auto : suit le réglage clair / sombre de votre appareil.": "Auto: follows the light / dark setting of your device.",
+    "Rappel quotidien": "Daily reminder",
+    "Indiquez d'abord votre moment de méditation dans votre profil.": "First set your meditation time in your profile.",
+    "Désactiver": "Turn off",
+    "Le rappel s'affiche si l'application est ouverte ou installée sur l'appareil.": "The reminder appears if the app is open or installed on the device.",
+    "Notification locale, sans compte ni serveur.": "Local notification, no account and no server.",
+    "💾 Mes données": "💾 My data",
+    "Tout est stocké sur cet appareil. Faites une sauvegarde avant de changer de téléphone ou de vider le cache du navigateur.": "Everything is stored on this device. Make a backup before changing phone or clearing your browser cache.",
+    "💾 Sauvegarder (JSON)": "💾 Back up (JSON)",
+    "↺ Restaurer": "↺ Restore",
+    "⬇ Exporter le journal (texte)": "⬇ Export the journal (text)",
+    "🗑 Tout effacer": "🗑 Erase everything",
+    "Texte : Louis Segond 1910, domaine public.": "Text: public domain translations.",
+    "Vos données ne quittent jamais cet appareil.": "Your data never leaves this device.",
+    "fonctionne hors-ligne": "works offline",
+    "📅 Ces cinq dernières semaines": "📅 These last five weeks",
+    "Chaque pastille verte est un jour où vous avez ouvert votre méditation.": "Each green dot is a day you opened your meditation.",
+    "🎖 Mes badges": "🎖 My badges",
+    "Première graine": "First seed",
+    "Votre première méditation": "Your first meditation",
+    "Une semaine": "One week",
+    "Un mois": "One month",
+    "Cent jours": "One hundred days",
+    "Une année": "One year",
+    "Sept d'affilée": "Seven in a row",
+    "Trente d'affilée": "Thirty in a row",
+    "Cent d'affilée": "One hundred in a row",
+    "7 jours de méditation": "7 days of meditation",
+    "30 jours de méditation": "30 days of meditation",
+    "100 jours de méditation": "100 days of meditation",
+    "365 jours de méditation": "365 days of meditation",
+    "7 jours consécutifs": "7 consecutive days",
+    "30 jours consécutifs": "30 consecutive days",
+    "100 jours consécutifs": "100 consecutive days",
+    "📊 En détail": "📊 In detail",
+    "Versets mis en favori": "Verses favourited",
+    "Versets surlignés": "Verses highlighted",
+    "Chapitres annotés": "Chapters annotated",
+    "Jours de plans validés": "Plan days completed",
+    "Versets découverts en méditation": "Verses discovered in meditation",
+    "Ma méditation personnalisée": "My personal meditation",
+    "Livre": "Book",
+    "Chapitre": "Chapter",
+    "Méthode": "Method",
+    "Dans l'ordre, jour après jour": "In order, day after day",
+    "Un verset surprise": "A surprise verse",
+    "Mon profil": "My profile",
+    "Votre prénom": "Your first name",
+    "Votre image": "Your picture",
+    "Mon moment de méditation": "My meditation time",
+    "Bienvenue": "Welcome",
+    "Passer": "Skip",
+    "Commencer": "Start",
+    "Continuer": "Continue",
+    "Note de méditation": "Meditation note",
+    "Modifier la note": "Edit the note",
+    "Ce que Dieu me dit aujourd'hui…": "What God is saying to me today…",
+    "Rechercher dans mes notes…": "Search my notes…",
+    "Partager ce verset": "Share this verse",
+    "🖼 Créer une carte image": "🖼 Create an image card",
+    "📲 Partager…": "📲 Share…",
+    "Carte-verset": "Verse card",
+    "Enregistrer l'image": "Save the image",
+    "Sauge": "Sage",
+    "Aube": "Dawn",
+    "Nuit": "Night",
+    "Papier": "Paper",
+    "Promesse": "Promise",
+    "Prière": "Prayer",
+    "Exaucé": "Answered",
+    "Merci": "Thanks",
+    "À creuser": "To dig into",
+    "Décision": "Decision",
+    "Bonjour": "Good morning",
+    "Bon après-midi": "Good afternoon",
+    "Bonsoir": "Good evening",
+    "Belle nuit": "Good night",
+    "Mode 📆 suivi — un verset après l'autre": "Mode 📆 sequential — one verse after another",
+    "Mode 🎲 aléatoire — une surprise chaque jour": "Mode 🎲 random — a surprise every day",
+    "Passage introuvable.": "Passage not found.",
+    "Étiquettes": "Tags",
+    "Prénom": "First name",
+    "Moment de méditation": "Meditation time",
+    "Restaurer une sauvegarde": "Restore a backup",
+    "Choisissez un fichier": "Choose a file",
+    "exporté depuis cette application, sur cet appareil ou sur un autre.": "exported from this app, on this device or another one.",
+    "Fusionner : ajoute les notes, favoris et progressions manquants, sans rien supprimer.": "Merge: adds the missing notes, favourites and progress, without deleting anything.",
+    "Remplacer : efface les données de cet appareil et installe celles du fichier.": "Replace: erases this device's data and installs the file's data.",
+    "Comment l'appliquer ?": "How should it be applied?",
+    "➕ Fusionner": "➕ Merge",
+    "↺ Remplacer": "↺ Replace",
+    "Restaurer": "Restore",
+    "← Précédent": "← Previous",
+    "Suivant →": "Next →",
+    "Dans l'ordre": "In order",
+    "Au hasard": "At random",
+    "Un verset par jour, dans l'ordre. Vous pouvez aussi avancer à la main.": "One verse a day, in order. You can also move forward by hand.",
+    "Verset général sur l'accueil": "General verse on the home screen",
+    "Activer sur l'accueil": "Turn on for the home screen",
+    "L'accueil affiche votre méditation personnalisée.": "The home screen shows your personal meditation.",
+    "L'accueil affiche le verset du jour général.": "The home screen shows the general verse of the day.",
+    "Arrivé au bout du passage, la lecture": "At the end of the passage, reading",
+    "Plan réinitialisé": "Plan reset"
+  },
+  "patterns": [
+    [
+      "^Bonjour, (.+)$",
+      "Good morning, $1"
+    ],
+    [
+      "^Bon après-midi, (.+)$",
+      "Good afternoon, $1"
+    ],
+    [
+      "^Bonsoir, (.+)$",
+      "Good evening, $1"
+    ],
+    [
+      "^Belle nuit, (.+)$",
+      "Good night, $1"
+    ],
+    [
+      "^(\\d+) / (\\d+) jours · (\\d+)%$",
+      "$1 / $2 days · $3%"
+    ],
+    [
+      "^(\\d+) versets$",
+      "$1 verses"
+    ],
+    [
+      "^(\\d+) verset$",
+      "$1 verse"
+    ],
+    [
+      "^(\\d+) ch\\.$",
+      "$1 ch."
+    ],
+    [
+      "^(\\d+) thèmes · (\\d+) versets choisis\\.$",
+      "$1 themes · $2 selected verses."
+    ],
+    [
+      "^Chapitre (\\d+)$",
+      "Chapter $1"
+    ],
+    [
+      "^Tout le livre \\((\\d+) chapitres\\)$",
+      "Whole book ($1 chapters)"
+    ],
+    [
+      "^(\\d+) résultats?$",
+      "$1 results"
+    ],
+    [
+      "^(\\d+)\\+ résultats \\(affinez la recherche\\)$",
+      "$1+ results (refine your search)"
+    ],
+    [
+      "^(\\d+) notes?$",
+      "$1 note|s"
+    ],
+    [
+      "^(\\d+) notes? sur (\\d+)$",
+      "$1 of $2 notes"
+    ],
+    [
+      "^★ Mes favoris \\((\\d+)\\)$",
+      "★ My favourites ($1)"
+    ],
+    [
+      "^encore (\\d+) jours?$",
+      "$1 days to go"
+    ],
+    [
+      "^encore (\\d+) séries?$",
+      "$1 more in the streak"
+    ],
+    [
+      "^Jour (\\d+)$",
+      "Day $1"
+    ],
+    [
+      "^Jour (\\d+) sur (\\d+)$",
+      "Day $1 of $2"
+    ],
+    [
+      "^Lire le jour (\\d+)$",
+      "Read day $1"
+    ],
+    [
+      "^Verset (\\d+) sur (\\d+) · suivi$",
+      "Verse $1 of $2 · sequential"
+    ],
+    [
+      "^Tirage du jour · (\\d+) versets? découverts? sur (\\d+)$",
+      "Today's draw · $1 discovered of $2"
+    ],
+    [
+      "^(\\d+) jour\\(s\\) médité\\(s\\) · série de (\\d+) · record (\\d+) · (\\d+) badge\\(s\\)$",
+      "$1 day|s meditated · streak of $2 · record $3 · $4 badge|s"
+    ],
+    [
+      "^(\\d+) note\\(s\\) · (\\d+) favori\\(s\\) · (\\d+) surlignage\\(s\\) · (\\d+) plan\\(s\\) en cours$",
+      "$1 note|s · $2 favourite|s · $3 highlight|s · $4 plan|s in progress"
+    ],
+    [
+      "^membre depuis le (.+) · méditation à (.+)$",
+      "member since $1 · meditation at $2"
+    ],
+    [
+      "^membre depuis le (.+)$",
+      "member since $1"
+    ],
+    [
+      "^Version (.+) · fonctionne hors-ligne$",
+      "Version $1 · works offline"
+    ],
+    [
+      "^(.+) · (\\d+) livres · ([\\d\\s ]+) chapitres$",
+      "$1 · $2 books · $3 chapters"
+    ],
+    [
+      "^🌈 (.+) \\((\\d+)\\)$",
+      "🌈 $1 ($2)"
+    ],
+    [
+      "^terminé ✓$",
+      "completed ✓"
+    ],
+    [
+      "^(.+) \\(livre entier\\)$",
+      "$1 (whole book)"
+    ],
+    [
+      "^Verset (\\d+) sur (\\d+)$",
+      "Verse $1 of $2"
+    ],
+    [
+      "^(\\d+) % du passage$",
+      "$1% of the passage"
+    ],
+    [
+      "^cycle n° (\\d+)$",
+      "cycle no. $1"
+    ],
+    [
+      "^Déjà rencontrés \\((\\d+)\\)$",
+      "Already seen ($1)"
+    ],
+    [
+      "^sauvegarde-meditation-(.+)\\.json$",
+      "meditation-backup-$1.json"
+    ]
+  ]
+}
