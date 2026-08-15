@@ -1063,10 +1063,11 @@ ok(/env\(safe-area-inset-bottom/.test(html), "zone sûre iPhone prise en compte"
   // -------------------------------------------------------------------------
   section("41. Versions de la Bible");
   const vers = MB.versions();
-  eq(vers.length, 9, "9 versions embarquées");
+  eq(vers.length, 12, "12 versions embarquées");
   const ids = vers.map(v => v.id).join(",");
-  eq(ids, "LSG,DBY,OST,MAR,KJV,WEB,ASV,YLT,BBE", "identifiants et ordre des versions");
-  eq(vers.filter(v => v.lang === "fr").length, 4, "4 versions françaises");
+  eq(ids, "LSG,DBY,OST,MAR,CRA,PGR,BAN,KJV,WEB,ASV,YLT,BBE",
+     "identifiants et ordre des versions");
+  eq(vers.filter(v => v.lang === "fr").length, 7, "7 versions françaises");
   eq(vers.filter(v => v.lang === "en").length, 5, "5 versions anglaises");
   ok(vers.every(v => v.nfr && v.nen && v.year && v.licence),
      "chaque version porte nom fr/en, année et licence");
@@ -1077,7 +1078,23 @@ ok(/env\(safe-area-inset-bottom/.test(html), "zone sûre iPhone prise en compte"
   ok(vers.every(v => REFS.every(r => {
     const t = MB.verseTextIn(v.id, r);
     return typeof t === "string" && t.length > 5;
-  })), "les 9 versions rendent un texte pour 6 références clés");
+  })), "les 12 versions rendent un texte pour 6 références clés");
+
+  // --- les trois versions françaises ajoutées
+  ok(/enfant nous est né/i.test(MB.verseTextIn("CRA", "ISA 9:5")),
+     "Crampon : Ésaïe 9:5 correctement aligné");
+  ok(/enfant nous est né/i.test(MB.verseTextIn("PGR", "ISA 9:5")),
+     "Perret-Gentil : Ésaïe 9:5 correctement aligné");
+  ok(/enfant nous est né/i.test(MB.verseTextIn("BAN", "ISA 9:5")),
+     "Bible Annotée : Ésaïe 9:5 correctement aligné");
+  ok(/beaucoup de bien|bien abonde/i.test(MB.verseTextIn("OST", "ECC 5:10")),
+     "Ostervald : décalage d'Ecclésiaste 5 corrigé");
+  ok(/Yahweh/.test(MB.verseTextIn("CRA", "PSA 23:1")),
+     "Crampon reconnaissable à son emploi de « Yahweh »");
+  // Crampon suit la Vulgate : les ajouts grecs d'Esther et Daniel sont écartés
+  ok(MB.verseTextIn("CRA", "EST 10:3").length > 5 &&
+     MB.verseTextIn("CRA", "DAN 3:23").length > 5,
+     "Crampon : canon hébreu respecté (Esther 10, Daniel 3)");
   ok(MB.verseTextIn("KJV", "JHN 3:16") !== MB.verseTextIn("LSG", "JHN 3:16"),
      "KJV et LSG donnent des textes différents");
   ok(/God so loved the world/i.test(MB.verseTextIn("KJV", "JHN 3:16")),

@@ -182,11 +182,30 @@ def main() -> int:
             dtxt, dpos = flatten(target[bi])
             al = align_book(stxt, dtxt)
             per: dict[int, list] = {}
+            # Un chapitre de même longueur des deux côtés est *présumé* aligné
+            # à l'identité — mais seulement si l'alignement statistique le
+            # confirme majoritairement. Sans ce garde-fou, une divergence de
+            # vocabulaire (Crampon « Yahweh », PGR « l'Éternel »…) suffit à
+            # faire dériver la programmation dynamique sur un chapitre pourtant
+            # parfaitement parallèle. Avec un garde-fou trop large, à l'inverse,
+            # on masquerait un vrai décalage (Ostervald sur Ecclésiaste 5).
+            accord: dict[int, list[int]] = {}
             for k, j in enumerate(al):
                 ci, vi = spos[k]
-                if len(base[bi][ci - 1]) == len(target[bi][ci - 1]) and \
-                        j >= 0 and dpos[j] == (ci, vi):
-                    continue  # identité : rien à stocker
+                if ci - 1 >= len(target[bi]):
+                    continue
+                if len(base[bi][ci - 1]) != len(target[bi][ci - 1]):
+                    continue
+                ok = accord.setdefault(ci, [0, 0])
+                ok[1] += 1
+                if j >= 0 and dpos[j] == (ci, vi):
+                    ok[0] += 1
+            memes = {ci for ci, (bon, tot) in accord.items()
+                     if tot and bon / tot >= 0.5}
+            for k, j in enumerate(al):
+                ci, vi = spos[k]
+                if ci in memes:
+                    continue  # identité confirmée : rien à stocker
                 per.setdefault(ci - 1, [])
                 while len(per[ci - 1]) < vi - 1:
                     per[ci - 1].append(0)

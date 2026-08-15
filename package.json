@@ -1,7 +1,7 @@
 {
   "name": "meditation-biblique",
-  "version": "1.6.0",
-  "description": "Application web de méditation biblique quotidienne, 100 % hors-ligne — 9 versions de la Bible (FR/EN), interface bilingue.",
+  "version": "1.7.0",
+  "description": "Application web de méditation biblique quotidienne, 100 % hors-ligne — 12 versions de la Bible (FR/EN), interface bilingue.",
   "private": true,
   "scripts": {
     "build": "python3 build.py",

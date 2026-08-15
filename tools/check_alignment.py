@@ -27,29 +27,38 @@ ROOT = Path(__file__).resolve().parent.parent
 DATA = ROOT / "data"
 VDIR = DATA / "versions"
 
-FR = ("LSG", "DBY", "OST", "MAR")
+FR = ("LSG", "DBY", "OST", "MAR", "CRA", "PGR", "BAN")
 EN = ("KJV", "WEB", "ASV", "YLT", "BBE")
 
 # référence LSG -> (mots attendus en français, mots attendus en anglais)
 # un seul des mots suffit (les traductions varient)
 CASES = [
-    ("PSA 51:12", ["cœur pur", "coeur pur", "coeur net"], ["clean heart", "right heart"]),
-    ("PSA 23:1", ["berger"], ["shepherd", "sheep"]),
-    ("PSA 23:4", ["vallée", "ombre de la mort"], ["valley", "shadow"]),
-    ("PSA 3:2", ["ennemis", "pressent"], ["increased", "distresses", "attacks", "trouble"]),
-    ("PSA 119:105", ["lampe"], ["lamp", "light"]),
-    ("PSA 46:2", ["refuge", "retraite"], ["refuge", "harbour"]),
+    ("PSA 51:12", ["cœur pur", "coeur pur", "coeur net"],
+     ["clean heart", "right heart"]),
+    ("PSA 23:1", ["berger", "pasteur"], ["shepherd", "sheep"]),
+    ("PSA 23:4", ["vallée", "ombre de la mort", "sombre vallée"],
+     ["valley", "shadow"]),
+    ("PSA 3:2", ["ennemis", "pressent", "nombreux", "adversaires"],
+     ["increased", "distresses", "attacks", "trouble"]),
+    ("PSA 119:105", ["lampe", "flambeau"], ["lamp", "light"]),
+    ("PSA 46:2", ["refuge", "retraite", "rempart", "asile", "secours"],
+     ["refuge", "harbour"]),
     ("PSA 91:1", ["Très-Haut", "Tres-Haut", "Souverain"], ["Most High"]),
     ("ISA 9:5", ["enfant nous est né", "enfant nous est ne", "enfant nous est"], ["child is born", "child has come", "child hath been born"]),
-    ("ISA 40:31", ["aigles"], ["eagles"]),
-    ("ISA 53:5", ["blessé", "blesse", "meurtri", "navré"], ["wounded", "pierced"]),
-    ("JON 2:2", ["pria", "prière"], ["prayed", "prayeth", "made prayer"]),
-    ("ECC 4:9", ["Deux valent mieux"], ["Two are better", "two are better"]),
-    ("ECC 5:10", ["abonde", "beaucoup de bien", "augmentation des biens"], ["goods increase", "goods are increased", "multiplying of good"]),
+    ("ISA 40:31", ["aigles", "ailes"], ["eagles"]),
+    ("ISA 53:5", ["blessé", "blesse", "meurtri", "navré", "percé", "transpercé"],
+     ["wounded", "pierced"]),
+    ("JON 2:2", ["pria", "prière", "entrailles"],
+     ["prayed", "prayeth", "made prayer"]),
+    ("ECC 4:9", ["Deux valent mieux", "vivre à deux", "mieux vaut"],
+     ["Two are better", "two are better"]),
+    ("ECC 5:10", ["abonde", "beaucoup de bien", "augmentation des biens",
+                  "biens se multiplient", "bien devient plus grand"],
+     ["goods increase", "goods are increased", "multiplying of good"]),
     ("MRK 9:23", ["possible"], ["possible"]),
     ("MRK 10:27", ["impossible", "possible"], ["impossible", "possible"]),
-    ("3JN 1:4", ["joie"], ["joy"]),
-    ("NAM 1:7", ["bon"], ["good"]),
+    ("3JN 1:4", ["joie", "grâce"], ["joy"]),
+    ("NAM 1:7", ["bon", "refuge", "lieu fort"], ["good"]),
     ("JHN 3:16", ["aimé le monde", "aime le monde"], ["loved the world", "love the world", "such love for the world"]),
     ("GEN 1:1", ["commencement"], ["beginning", "first"]),
     ("ROM 8:28", ["toutes choses"], ["all things", "everything"]),
@@ -58,7 +67,8 @@ CASES = [
     ("MAL 3:10", ["dîmes", "dimes"], ["tithes", "tithe", "tenths"]),
     ("MAL 4:2", ["soleil"], ["sun"]),
     ("PSA 42:2", ["biche", "cerf"], ["hart", "deer", "roe"]),
-    ("HOS 2:16", ["attirer", "attirerai"], ["allure", "enticing", "make her come"]),
+    ("HOS 2:16", ["attirer", "attirerai", "gagner", "désert"],
+     ["allure", "enticing", "make her come"]),
 ]
 
 

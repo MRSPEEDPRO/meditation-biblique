@@ -11,7 +11,8 @@ Le texte compact utilise les mêmes séparateurs que la version historique :
   \\x1e entre versets · \\x1d entre chapitres · \\x1c entre livres.
 
 Sources (toutes dans le domaine public) :
-  scrollmapper/bible_databases  KJV, ASV, YLT, BBE, FreJND (Darby), FreBDM1744
+  scrollmapper/bible_databases  KJV, ASV, YLT, BBE, FreJND (Darby), FreBDM1744,
+                                FreCrampon, FrePGR, FreBBB
   world-english-bible (npm)     WEB
   splitant/php-bible-api        Ostervald
   data/bible_lsg.json           Louis Segond 1910 (déjà présent dans le dépôt)
@@ -92,6 +93,12 @@ VERSIONS = [
      "Domaine public", "ost", None),
     ("MAR", "David Martin 1744", "David Martin (1744)", "fr", 1744,
      "Domaine public", "bdb", "FreBDM1744"),
+    ("CRA", "Crampon 1923 (catholique)", "Crampon (1923, Catholic)", "fr",
+     1923, "Domaine public", "bdb", "FreCrampon"),
+    ("PGR", "Perret-Gentil et Rilliet 1866", "Perret-Gentil & Rilliet (1866)",
+     "fr", 1866, "Domaine public", "bdb", "FrePGR"),
+    ("BAN", "Bible Annotée de Neuchâtel 1899", "Neuchâtel Annotated Bible (1899)",
+     "fr", 1899, "Domaine public", "bdb", "FreBBB"),
     ("KJV", "King James Version (1769)", "King James Version (1769)", "en",
      1769, "Public domain", "bdb", "KJV"),
     ("WEB", "World English Bible", "World English Bible", "en", 2000,
@@ -184,11 +191,58 @@ def load_lsg(_src: Path, _name) -> list[list[list[str]]]:
     return [[[clean(v) for v in ch] for ch in b["c"]] for b in d["books"]]
 
 
+# Livres deutérocanoniques : présents dans Crampon (73 livres), absents du
+# canon protestant de 66 livres retenu par l'application. On les écarte pour
+# que l'index des livres reste comparable d'une version à l'autre.
+DEUTEROCANONIQUES = {
+    "Tobit", "Judith", "I Maccabees", "II Maccabees", "Wisdom", "Sirach",
+    "Baruch",
+}
+
+
+# Crampon suit la Vulgate : outre les 7 livres deutérocanoniques, il insère des
+# passages grecs *à l'intérieur* d'Esther et de Daniel. On revient au canon
+# hébreu, seul comparable aux onze autres versions.
+#
+#   Daniel 3  (100 v. chez Crampon) :
+#       v. 1-23   canoniques            → Daniel 3:1-23
+#       v. 24-90  Prière d'Azarias et Cantique des trois enfants → écartés
+#       v. 91-97  canoniques            → Daniel 3:24-30
+#       v. 98-100 canoniques            → début de Daniel 4 (LSG 4:1-3)
+#   Daniel 4 (34 v.) correspond donc à LSG 4:4-37, à recoller derrière.
+#   Daniel 13-14 : Suzanne · Bel et le Dragon → chapitres écartés
+#   Esther 10 : v. 1-3 canoniques, v. 4-13 épilogue grec → écartés
+#   Esther 11-16 : compléments grecs → chapitres écartés
+
+
+def couper_crampon(bk: list[list[list[str]]]) -> list[list[list[str]]]:
+    dan, est = bk[26], bk[16]
+
+    # Daniel 3 : on retire la Prière d'Azarias, on recolle la suite canonique.
+    c3 = dan[2]
+    if len(c3) == 100:
+        dan[2] = c3[:23] + c3[90:97]        # 3:1-23 puis 3:24-30
+        dan[3] = c3[97:100] + dan[3]        # 4:1-3 puis le reste du chapitre 4
+
+    dan[:] = dan[:12]                        # écarte Suzanne et Bel et le Dragon
+    est[9] = est[9][:3]                      # Esther 10 : seuls les 3 premiers
+    est[:] = est[:10]                        # écarte les compléments grecs
+    return bk
+
+
 def load_bdb(src: Path, name: str) -> list[list[list[str]]]:
     p = src / "bible_databases" / "formats" / "json" / f"{name}.json"
     d = json.loads(p.read_text(encoding="utf-8"))
+    livres = [b for b in d["books"]
+              if b.get("name") not in DEUTEROCANONIQUES]
+    if len(livres) != 66:
+        raise SystemExit(
+            f"{name}: {len(livres)} livres après filtrage, 66 attendus"
+        )
     bk = [[[clean(v["text"]) for v in c["verses"]] for c in b["chapters"]]
-          for b in d["books"]]
+          for b in livres]
+    if name == "FreCrampon":
+        bk = couper_crampon(bk)
     return remap_hebrew_chapters(trim_trailing(bk))
 
 
