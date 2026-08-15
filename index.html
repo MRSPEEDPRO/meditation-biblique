@@ -1706,7 +1706,8 @@ window.PLANS=[{"id":"bible-1an","n":"La Bible en 1 an","i":"📖","d":"Les 1 189
     lu: {},               // {"AAAA-MM-JJ": "REF"} — historique verset du jour
     serie: { dernier: null, jours: 0, record: 0 },
     histo: [],            // ["AAAA-MM-JJ", ...] jours où l'on a médité
-    profil: null          // {nom, avatar, heure|null, depuis:"AAAA-MM-JJ"}
+    profil: null,         // {nom, avatar, heure|null, depuis:"AAAA-MM-JJ"}
+    garde: null           // {vu, jours, sceau} — cohérence de la progression
   };
 
   var S = load();
@@ -2738,6 +2739,108 @@ window.PLANS=[{"id":"bible-1an","n":"La Bible en 1 an","i":"📖","d":"Les 1 189
   }
 
   // --- Série de jours ------------------------------------------------------
+  // ==========================================================================
+  //  INTÉGRITÉ DE LA PROGRESSION
+  //  Les séries et les badges se veulent le reflet d'une pratique réelle. Tout
+  //  tourne sur l'appareil : rien n'est infalsifiable, et ce n'est pas le but.
+  //  On empêche simplement les incohérences — horloge reculée, historique
+  //  gonflé, sauvegarde retouchée — pour que le chiffre affiché veuille dire
+  //  quelque chose. Personne n'est bloqué : on recalcule à partir des faits.
+  // ==========================================================================
+
+  // Empreinte courte et non cryptographique de l'historique. Elle ne protège
+  // pas contre quelqu'un qui lit ce code — elle détecte une retouche à la main
+  // du fichier de sauvegarde, ce qui est le cas réel.
+  function sceau(histo, record) {
+    var h = 2166136261;
+    var src = (histo || []).join(",") + "|" + (record || 0) + "|" + KEY;
+    for (var i = 0; i < src.length; i++) {
+      h ^= src.charCodeAt(i);
+      h = (h * 16777619) >>> 0;
+    }
+    return h.toString(36);
+  }
+
+  // Nombre de jours entre deux dates « AAAA-MM-JJ » (calendaire, sans heure).
+  function ecartJours(a, b) {
+    if (!a || !b) return null;
+    var x = a.split("-"), y = b.split("-");
+    var da = Date.UTC(+x[0], +x[1] - 1, +x[2]);
+    var db = Date.UTC(+y[0], +y[1] - 1, +y[2]);
+    return Math.round((db - da) / 864e5);
+  }
+
+  // Recalcule la série depuis l'historique : c'est la seule source de vérité.
+  // Un record ne peut pas dépasser la plus longue suite réellement présente.
+  function serieDepuisHisto(histo, aujourdhui) {
+    var jours = (histo || []).slice().sort();
+    var vus = {}, uniq = [];
+    jours.forEach(function (j) { if (!vus[j]) { vus[j] = true; uniq.push(j); } });
+    var record = 0, courante = 0, precedent = null;
+    uniq.forEach(function (j) {
+      courante = (precedent && ecartJours(precedent, j) === 1) ? courante + 1 : 1;
+      if (courante > record) record = courante;
+      precedent = j;
+    });
+    // la série « en cours » ne vaut que si elle touche aujourd'hui ou hier
+    var enCours = 0;
+    if (precedent) {
+      var d = ecartJours(precedent, aujourdhui);
+      if (d === 0 || d === 1) {
+        enCours = 1;
+        for (var i = uniq.length - 2; i >= 0; i--) {
+          if (ecartJours(uniq[i], uniq[i + 1]) === 1) enCours++; else break;
+        }
+      }
+    }
+    return { jours: enCours, record: record, total: uniq.length };
+  }
+
+  // Passe l'état au crible. Renvoie la liste des corrections appliquées.
+  function verifierIntegrite() {
+    var today = ymd(new Date());
+    var corrige = [];
+    if (!S.histo) S.histo = [];
+    if (!S.serie) S.serie = { dernier: null, jours: 0, record: 0 };
+
+    // -- jours postérieurs à aujourd'hui : horloge avancée puis remise à l'heure
+    var futurs = S.histo.filter(function (j) { return j > today; });
+    if (futurs.length) {
+      S.histo = S.histo.filter(function (j) { return j <= today; });
+      corrige.push("futur");
+    }
+
+    // -- doublons
+    var vus = {}, net = [];
+    S.histo.forEach(function (j) {
+      if (/^\d{4}-\d{2}-\d{2}$/.test(j) && !vus[j]) { vus[j] = true; net.push(j); }
+    });
+    if (net.length !== S.histo.length) { S.histo = net; corrige.push("doublons"); }
+    S.histo.sort();
+
+    // -- l'horloge a-t-elle reculé ? (le dernier jour connu est dans le futur)
+    var g = S.garde;
+    if (g && g.vu && g.vu > today) corrige.push("horloge");
+
+    // -- série et record recalculés depuis les faits
+    var vrai = serieDepuisHisto(S.histo, today);
+    if (S.serie.jours !== vrai.jours) { S.serie.jours = vrai.jours; corrige.push("serie"); }
+    if ((S.serie.record || 0) > vrai.record) {
+      // un record supérieur à la plus longue suite réelle n'a pas de sens,
+      // sauf s'il vient d'une sauvegarde scellée que l'on a validée
+      var scelle = g && g.sceau === sceau(S.histo, g.record) ? g.record : 0;
+      S.serie.record = Math.max(vrai.record, Math.min(S.serie.record, scelle));
+      corrige.push("record");
+    } else if ((S.serie.record || 0) < vrai.record) {
+      S.serie.record = vrai.record;
+    }
+    S.serie.dernier = S.histo.length ? S.histo[S.histo.length - 1] : null;
+
+    // -- on rescelle
+    S.garde = { vu: today, jours: vrai.total, sceau: sceau(S.histo, S.serie.record) };
+    return corrige;
+  }
+
   function touchStreak() {
     var today = ymd(new Date());
     var st = S.serie;
@@ -2746,11 +2849,11 @@ window.PLANS=[{"id":"bible-1an","n":"La Bible en 1 an","i":"📖","d":"Les 1 189
       S.histo.push(today);
       if (S.histo.length > 800) S.histo = S.histo.slice(-800);
     }
-    if (st.dernier === today) { save(); return; }
-    var y = ymd(addDays(new Date(), -1));
-    st.jours = (st.dernier === y) ? st.jours + 1 : 1;
+    var vrai = serieDepuisHisto(S.histo, today);
+    st.jours = vrai.jours;
+    st.record = Math.max(st.record || 0, vrai.record);
     st.dernier = today;
-    if (st.jours > st.record) st.record = st.jours;
+    S.garde = { vu: today, jours: vrai.total, sceau: sceau(S.histo, st.record) };
     save();
   }
 
@@ -3489,8 +3592,9 @@ window.PLANS=[{"id":"bible-1an","n":"La Bible en 1 an","i":"📖","d":"Les 1 189
     var paquet = {
       format: BACKUP_TAG,
       version: 1,
-      app: "1.5.0",
+      app: "1.6.0",
       date: new Date().toISOString(),
+      sceau: sceau(S.histo, S.serie ? S.serie.record : 0),
       donnees: S
     };
     var blob = new Blob([JSON.stringify(paquet, null, 1)],
@@ -3521,7 +3625,19 @@ window.PLANS=[{"id":"bible-1an","n":"La Bible en 1 an","i":"📖","d":"Les 1 189
       }
     });
 
-    if (!fusion) { S = base; save(); return { notes: S.notes.length, favoris: S.favoris.length }; }
+    // Une sauvegarde dont le sceau ne correspond pas a été retouchée : on
+    // garde les données (notes, favoris — le travail de l'utilisateur) mais on
+    // repart de l'historique pour la série, sans faire confiance aux compteurs.
+    var scelle = paquet.sceau &&
+      paquet.sceau === sceau(base.histo, base.serie ? base.serie.record : 0);
+    if (!scelle && base.serie) base.serie.record = 0;
+
+    if (!fusion) {
+      S = base;
+      verifierIntegrite();
+      save();
+      return { notes: S.notes.length, favoris: S.favoris.length, scelle: !!scelle };
+    }
 
     // fusion : on ne perd rien de ce qui existe déjà sur l'appareil
     var ids = {};
@@ -3548,18 +3664,21 @@ window.PLANS=[{"id":"bible-1an","n":"La Bible en 1 an","i":"📖","d":"Les 1 189
       dst.faits.sort(function (a, b) { return a - b; });
       if (src.debut && (!dst.debut || src.debut < dst.debut)) dst.debut = src.debut;
     });
-    if (base.serie) {
-      S.serie.record = Math.max(S.serie.record || 0, base.serie.record || 0, base.serie.jours || 0);
-      if (!S.serie.dernier || (base.serie.dernier || "") > S.serie.dernier) {
-        S.serie.dernier = base.serie.dernier;
-        S.serie.jours = base.serie.jours || S.serie.jours;
-      }
+    // On fusionne les jours réellement médités, puis on recalcule : deux
+    // appareils utilisés en parallèle donnent ainsi la bonne série, sans
+    // qu'un compteur importé puisse gonfler le record.
+    (base.histo || []).forEach(function (j) {
+      if (S.histo.indexOf(j) === -1) S.histo.push(j);
+    });
+    if (scelle && base.serie) {
+      S.serie.record = Math.max(S.serie.record || 0, base.serie.record || 0);
     }
     if (!S.profil && base.profil) S.profil = base.profil;
     if (!S.perso && base.perso) S.perso = base.perso;
     if (!S.lecture && base.lecture) S.lecture = base.lecture;
+    verifierIntegrite();
     save();
-    return { notes: base.notes.length, favoris: base.favoris.length };
+    return { notes: base.notes.length, favoris: base.favoris.length, scelle: !!scelle };
   }
 
   function importSauvegardeSheet() {
@@ -4757,6 +4876,7 @@ window.PLANS=[{"id":"bible-1an","n":"La Bible en 1 an","i":"📖","d":"Les 1 189
   }
 
   function boot() {
+    verifierIntegrite();
     applySettings();
     progression(0.1);
     var lp = $("#loader p");
@@ -4807,6 +4927,9 @@ window.PLANS=[{"id":"bible-1an","n":"La Bible en 1 an","i":"📖","d":"Les 1 189
     manifest: manifestJSON,
     dessinerCarte: dessinerCarte,
     backupTag: BACKUP_TAG,
+    verifierIntegrite: verifierIntegrite,
+    serieDepuisHisto: serieDepuisHisto,
+    sceau: sceau,
     // versions et langues
     versions: function () { return VERSIONS; },
     version: function () { return version; },

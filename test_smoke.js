@@ -783,7 +783,10 @@ ok(/env\(safe-area-inset-bottom/.test(html), "zone sûre iPhone prise en compte"
   ok(MB.state().favoris.indexOf("ROM 8:28") !== -1, "fusion : favori importé");
   eq(MB.state().surlignes["PSA 23:1"], "v", "fusion : surlignage importé");
   ok(MB.state().plans["nt-90"].faits.indexOf(1) !== -1, "fusion : progression de plan importée");
-  ok(MB.state().serie.record >= 12, "fusion : record de série conservé");
+  // le record importé (12) n'est pas repris : le fichier n'est pas scellé et
+  // aucun historique ne le justifie — seule la pratique réelle compte
+  ok(MB.state().serie.record < 12,
+    "fusion : un record non scellé n'est pas repris tel quel");
   MB.appliquerSauvegarde(JSON.parse(JSON.stringify(paquet)), true);
   ok(MB.state().notes.filter(n => n.id === "test-import-1").length === 1,
     "fusion idempotente : pas de doublon");
@@ -1151,6 +1154,80 @@ ok(/env\(safe-area-inset-bottom/.test(html), "zone sûre iPhone prise en compte"
     new window.MouseEvent("click", { bubbles: true }));
   ok(/Plans de lecture/.test(document.getElementById("main").textContent),
      "retour au français dans les vues");
+
+  // -------------------------------------------------------------------------
+  section("43. Intégrité de la progression");
+  const St2 = MB.state();
+  const jr = n => { const d = new Date(); d.setDate(d.getDate() - n);
+    return d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") +
+           "-" + String(d.getDate()).padStart(2, "0"); };
+
+  // --- la série se déduit de l'historique, pas d'un compteur
+  const s5 = MB.serieDepuisHisto([jr(0), jr(1), jr(2), jr(3), jr(4)], jr(0));
+  eq(s5.jours, 5, "5 jours consécutifs → série de 5");
+  eq(s5.record, 5, "record égal à la suite la plus longue");
+  const trou = MB.serieDepuisHisto([jr(9), jr(8), jr(7), jr(1), jr(0)], jr(0));
+  eq(trou.jours, 2, "série en cours arrêtée par un trou");
+  eq(trou.record, 3, "record = plus longue suite passée");
+  eq(MB.serieDepuisHisto([jr(4), jr(3)], jr(0)).jours, 0,
+     "série rompue si le dernier jour est trop ancien");
+  eq(MB.serieDepuisHisto([jr(1)], jr(0)).jours, 1,
+     "série conservée si l'on a médité hier");
+
+  // --- un compteur gonflé à la main est ramené à la réalité
+  St2.histo = [jr(2), jr(1), jr(0)];
+  St2.serie = { dernier: jr(0), jours: 999, record: 999 };
+  MB.verifierIntegrite();
+  eq(MB.state().serie.jours, 3, "série gonflée ramenée à l'historique réel");
+  eq(MB.state().serie.record, 3, "record gonflé ramené à l'historique réel");
+
+  // --- des jours dans le futur (horloge avancée) sont écartés
+  St2.histo = [jr(0), jr(-3), jr(-10)];
+  St2.serie = { dernier: jr(-10), jours: 3, record: 3 };
+  const corr = MB.verifierIntegrite();
+  ok(corr.indexOf("futur") !== -1, "jours postérieurs à aujourd'hui détectés");
+  ok(MB.state().histo.every(j => j <= jr(0)), "aucun jour futur conservé");
+  eq(MB.state().serie.jours, 1, "série recalculée sans les jours futurs");
+
+  // --- doublons ignorés
+  St2.histo = [jr(0), jr(0), jr(1), jr(1), jr(1)];
+  St2.serie = { dernier: jr(0), jours: 5, record: 5 };
+  MB.verifierIntegrite();
+  eq(MB.state().histo.length, 2, "jours en double fusionnés");
+  eq(MB.state().serie.jours, 2, "série comptée en jours distincts");
+
+  // --- le sceau détecte une sauvegarde retouchée
+  const hh = [jr(2), jr(1), jr(0)];
+  ok(MB.sceau(hh, 3) === MB.sceau(hh, 3), "sceau stable");
+  ok(MB.sceau(hh, 3) !== MB.sceau(hh, 99), "sceau sensible au record");
+  ok(MB.sceau(hh, 3) !== MB.sceau(hh.concat(jr(3)), 3), "sceau sensible à l'historique");
+
+  // --- import scellé honnête : le record est repris
+  const vrai = [];
+  for (let i = 0; i < 12; i++) vrai.push(jr(i));
+  vrai.sort();
+  const paqOk = { format: MB.backupTag, version: 1,
+    sceau: MB.sceau(vrai, 12),
+    donnees: { histo: vrai, serie: { dernier: jr(0), jours: 12, record: 12 },
+               notes: [], favoris: [] } };
+  MB.appliquerSauvegarde(JSON.parse(JSON.stringify(paqOk)), false);
+  eq(MB.state().serie.record, 12, "sauvegarde scellée : record légitime repris");
+  eq(MB.state().serie.jours, 12, "sauvegarde scellée : série reprise");
+
+  // --- import retouché : record refusé, mais les notes sont conservées
+  const paqKo = { format: MB.backupTag, version: 1,
+    sceau: MB.sceau(vrai, 12),
+    donnees: { histo: vrai, serie: { dernier: jr(0), jours: 999, record: 999 },
+               notes: [{ id: "keep-1", date: new Date().toISOString(),
+                         ref: "JHN 3:16", texte: "à conserver" }],
+               favoris: ["ROM 8:28"] } };
+  const bilan2 = MB.appliquerSauvegarde(JSON.parse(JSON.stringify(paqKo)), false);
+  ok(bilan2.scelle === false, "sceau invalide signalé");
+  eq(MB.state().serie.record, 12, "record retouché ramené à l'historique réel");
+  ok(MB.state().notes.some(n => n.id === "keep-1"),
+     "les notes sont conservées malgré le sceau invalide");
+  ok(MB.state().favoris.indexOf("ROM 8:28") !== -1,
+     "les favoris sont conservés malgré le sceau invalide");
 
   console.log("\n" + "─".repeat(54));
   if (fail) {

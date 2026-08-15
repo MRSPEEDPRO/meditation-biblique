@@ -51,7 +51,30 @@ Publiable tel quel sur GitHub Pages, Netlify, une clé USB ou envoyé par WhatsA
 | 🔀 **Comparaison de versions** | Un même verset affiché dans les 9 traductions côte à côte, groupées par langue |
 | 🌍 **Interface bilingue FR/EN** | Sélecteur de langue qui traduit **toute** l'application : onglets, titres, boutons, plans, thèmes, dates et noms des livres bibliques |
 | 🌗 **Thème auto** | Jour, nuit, ou **auto** suivant le réglage clair/sombre du téléphone |
-| 📈 **Ma progression** | Calendrier des 5 dernières semaines · série en cours et record · **8 badges** · statistiques détaillées |
+| 📈 **Ma progression** | Calendrier des 5 dernières semaines · série en cours et record · **8 badges** · statistiques détaillées · séries **recalculées depuis les jours réellement médités** et sauvegardes scellées, pour que les chiffres veuillent dire quelque chose |
+
+---
+
+## 🎯 Une progression qui veut dire quelque chose
+
+Les séries et les badges ne sont pas de simples compteurs que l'on incrémente : ils sont
+**recalculés à partir des jours réellement médités** (`histo`). Un compteur modifié à la main
+est donc ramené à la réalité au prochain démarrage, les jours postérieurs à aujourd'hui
+(horloge avancée puis remise à l'heure) sont écartés, et les doublons fusionnés.
+
+Les fichiers de sauvegarde portent un **sceau** calculé sur l'historique. À la restauration,
+un fichier retouché est détecté : vos **notes et favoris sont intégralement conservés** —
+c'est votre travail — mais le record de série n'est pas repris sur parole, il est recalculé.
+Restaurer une sauvegarde honnête sur un nouveau téléphone fonctionne normalement.
+
+Tout ceci tourne sur l'appareil. Ce n'est donc **pas inviolable**, et ce n'est pas le but :
+qui lit ce code peut le contourner. L'objectif est d'empêcher les incohérences accidentelles
+et la triche facile, pour que le chiffre affiché reste honnête vis-à-vis de soi-même.
+
+> **À noter** — l'application n'a pas de comptes : le profil est purement local. Rien ne peut
+> empêcher une même personne d'avoir plusieurs profils (autre navigateur, autre appareil,
+> données effacées), et le vérifier supposerait un serveur et une identité vérifiée, à
+> rebours de la promesse « rien ne sort de votre téléphone ».
 
 ---
 
@@ -94,7 +117,7 @@ modifier ou supprimer (« Tout effacer ») à tout moment.
 | `build.py` | Assemble `index.html` |
 | `sw.js` | Service worker **facultatif**, utile seulement si le site est hébergé |
 | `tools/ci.workflow.yml` | Workflow d'intégration continue prêt à l'emploi (voir ci-dessous) |
-| `test_smoke.js` | 440 vérifications automatiques (jsdom) |
+| `test_smoke.js` | 462 vérifications automatiques (jsdom) |
 
 ---
 
@@ -103,7 +126,7 @@ modifier ou supprimer (« Tout effacer ») à tout moment.
 ```bash
 npm install          # jsdom, pour les tests uniquement
 python3 build.py     # assemble index.html
-npm test             # 440 vérifications
+npm test             # 462 vérifications
 ```
 
 Pour régénérer les données éditoriales :
@@ -128,7 +151,7 @@ si les workers ne sont pas disponibles.
 ## 🤖 Intégration continue
 
 Un workflow GitHub Actions est fourni dans `tools/ci.workflow.yml` : il assemble `index.html`,
-vérifie qu'il est bien à jour par rapport à `src/`, lance les 440 tests et contrôle qu'aucune
+vérifie qu'il est bien à jour par rapport à `src/`, lance les 462 tests et contrôle qu'aucune
 ressource externe n'a été introduite. Pour l'activer :
 
 ```bash
@@ -156,6 +179,8 @@ git add .github/workflows/ci.yml && git commit -m "CI" && git push
 - le thème automatique et la carte-verset en image (4 fonds, aperçu, enregistrement)
 - le manifeste d'installation : icônes embarquées, aucun fichier externe
 - la progression : calendrier, séries, badges et statistiques
+- l'intégrité de la progression : série déduite de l'historique, compteur gonflé ramené
+  à la réalité, jours futurs et doublons écartés, sauvegarde retouchée détectée par son sceau
 - le journal enrichi : recherche, filtres par étiquette, modification, souvenirs d'un an
 - la lecture audio du chapitre et le surlignage du verset prononcé
 - la décompression en Web Worker et son repli synchrone
