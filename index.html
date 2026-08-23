@@ -1207,6 +1207,279 @@ mark { background: color-mix(in srgb, var(--clay) 32%, transparent); color: inhe
   font-size: .74rem;
   border-radius: 8px;
 }
+
+/* --- ZARVIS : assistant local ------------------------------------------- */
+/* Une interface volontairement plus technique que le reste de l'application.
+   Le cerveau reste local : aucune requête réseau n'est nécessaire. */
+.zarvis-launcher {
+  position: fixed;
+  right: max(18px, calc((100vw - var(--maxw)) / 2 + 18px));
+  bottom: calc(92px + var(--safe-b));
+  z-index: 45;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 52px;
+  padding: 4px 12px 4px 5px;
+  border: 1px solid rgba(111, 128, 96, .55);
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--card) 92%, transparent);
+  color: var(--ink);
+  box-shadow: 0 8px 26px rgba(30, 42, 35, .18), 0 0 0 1px rgba(255,255,255,.18) inset;
+  backdrop-filter: blur(14px);
+  transition: transform .18s, box-shadow .18s, border-color .18s;
+}
+.zarvis-launcher:hover {
+  transform: translateY(-2px);
+  border-color: var(--sage);
+  box-shadow: 0 11px 30px rgba(30, 42, 35, .24), 0 0 22px rgba(111, 128, 96, .2);
+}
+.zarvis-launcher:active { transform: scale(.96); }
+.zarvis-launcher-label {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  font-size: .69rem;
+  font-weight: 800;
+  letter-spacing: .12em;
+}
+.zarvis-orb {
+  position: relative;
+  width: 42px;
+  height: 42px;
+  display: grid;
+  place-items: center;
+  flex: 0 0 42px;
+  border-radius: 50%;
+  background:
+    radial-gradient(circle at 34% 28%, #e8fff1 0 5%, transparent 17%),
+    conic-gradient(from 210deg, #7fe1a3, #7e9bff, #b878ff, #7fe1a3);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--card) 84%, transparent),
+              0 0 18px rgba(127, 225, 163, .65);
+  animation: zarvis-breathe 3.2s ease-in-out infinite;
+}
+.zarvis-orb::before,
+.zarvis-orb::after {
+  content: "";
+  position: absolute;
+  border: 1px solid rgba(223, 255, 236, .8);
+  border-radius: 50%;
+}
+.zarvis-orb::before { inset: 6px; opacity: .75; }
+.zarvis-orb::after { inset: 11px; opacity: .45; }
+.zarvis-orb-core {
+  position: relative;
+  z-index: 1;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: #f3fff7;
+  box-shadow: 0 0 12px 4px rgba(243, 255, 247, .92);
+}
+@keyframes zarvis-breathe {
+  0%, 100% { filter: saturate(.9); }
+  50% { filter: saturate(1.35); }
+}
+
+.zarvis-card {
+  position: relative;
+  overflow: hidden;
+  display: block;
+  width: 100%;
+  text-align: left;
+  color: #eefaf2;
+  border-color: #293b34;
+  background:
+    radial-gradient(100% 160% at 100% 0%, rgba(96, 125, 255, .28), transparent 52%),
+    radial-gradient(80% 130% at 0% 100%, rgba(74, 211, 141, .2), transparent 58%),
+    #101a19;
+}
+.zarvis-card:hover { border-color: #79c999; }
+.zarvis-card::after {
+  content: "ZARVIS // LOCAL CORE";
+  position: absolute;
+  right: 18px;
+  bottom: 17px;
+  font: 700 .58rem/1 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  letter-spacing: .14em;
+  color: rgba(203, 244, 217, .52);
+}
+.zarvis-card-main { display: flex; align-items: center; gap: 14px; }
+.zarvis-card .zarvis-orb { width: 50px; height: 50px; flex-basis: 50px; }
+.zarvis-card .zarvis-orb-core { width: 12px; height: 12px; }
+.zarvis-card-title {
+  font: 800 1.05rem/1.2 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  letter-spacing: .08em;
+}
+.zarvis-card-sub { margin-top: 5px; color: #b8d6c1; font: .82rem/1.45 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+.zarvis-arrow { margin-left: auto; color: #8be0a8; font-size: 1.35rem; }
+
+.zarvis-bg {
+  position: fixed;
+  inset: 0;
+  z-index: 85;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  padding: 0;
+  background: rgba(2, 8, 8, .7);
+  backdrop-filter: blur(8px);
+  animation: fade .18s ease;
+}
+@media (min-width: 640px) {
+  .zarvis-bg { align-items: center; padding: 24px; }
+}
+.zarvis-panel {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  max-width: 620px;
+  height: min(760px, 92vh);
+  overflow: hidden;
+  color: #e9f8ee;
+  border: 1px solid #304b3e;
+  border-radius: 26px 26px 0 0;
+  background:
+    radial-gradient(90% 60% at 100% 0%, rgba(79, 104, 213, .2), transparent 65%),
+    radial-gradient(100% 60% at 0% 100%, rgba(53, 180, 112, .11), transparent 62%),
+    #0b1212;
+  box-shadow: 0 18px 70px rgba(0, 0, 0, .5), 0 0 0 1px rgba(188, 255, 211, .06) inset;
+  animation: zarvis-rise .28s cubic-bezier(.2, .8, .3, 1);
+}
+@media (min-width: 640px) {
+  .zarvis-panel { height: min(760px, 88vh); border-radius: 26px; }
+}
+@keyframes zarvis-rise { from { transform: translateY(24px) scale(.985); opacity: 0; } }
+.zarvis-panel button { color: inherit; }
+.zarvis-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: calc(13px + var(--safe-t)) 16px 12px;
+  border-bottom: 1px solid rgba(145, 201, 165, .16);
+  background: rgba(5, 13, 12, .55);
+}
+.zarvis-close,
+.zarvis-voice {
+  width: 40px;
+  height: 40px;
+  display: grid;
+  place-items: center;
+  flex: 0 0 40px;
+  border: 1px solid rgba(145, 201, 165, .2);
+  border-radius: 12px;
+  color: #a8cdb4 !important;
+  font: 1.05rem/1 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  background: rgba(117, 185, 139, .08);
+}
+.zarvis-close:hover,
+.zarvis-voice:hover,
+.zarvis-voice.on { border-color: #72d394; background: rgba(114, 211, 148, .17); color: #dcffe5 !important; }
+.zarvis-head-copy { flex: 1; min-width: 0; }
+.zarvis-kicker { color: #7ed99c; font: 700 .62rem/1 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; letter-spacing: .2em; }
+.zarvis-title { margin-top: 4px; font: 800 1.1rem/1 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; letter-spacing: .14em; }
+.zarvis-subtitle { margin-top: 5px; color: #9bb8a5; font: .74rem/1.2 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+.zarvis-head .zarvis-orb { width: 38px; height: 38px; flex-basis: 38px; }
+.zarvis-head .zarvis-orb-core { width: 8px; height: 8px; }
+.zarvis-scan {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 14px 16px 0;
+  padding: 8px 11px;
+  border: 1px solid rgba(126, 217, 156, .16);
+  border-radius: 9px;
+  color: #a3cdb0;
+  background: rgba(78, 170, 108, .07);
+  font: .68rem/1.3 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  letter-spacing: .04em;
+}
+.zarvis-scan-dot { width: 7px; height: 7px; flex: 0 0 7px; border-radius: 50%; background: #76e49b; box-shadow: 0 0 9px #76e49b; }
+.zarvis-body {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  padding: 16px 16px 10px;
+  scrollbar-color: #41664f transparent;
+}
+.zarvis-welcome { padding: 24px 4px 12px; text-align: center; }
+.zarvis-welcome .zarvis-big-orb { margin: 0 auto 16px; width: 74px; height: 74px; }
+.zarvis-big-orb .zarvis-orb-core { width: 16px; height: 16px; }
+.zarvis-welcome h2 { margin: 0; font: 700 1.45rem/1.15 Georgia, serif; color: #f2fff5; }
+.zarvis-welcome p { max-width: 450px; margin: 10px auto 18px; color: #a9c6b1; font: .88rem/1.55 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+.zarvis-quick { display: flex; flex-wrap: wrap; justify-content: center; gap: 7px; }
+.zarvis-quick button {
+  min-height: 34px;
+  padding: 0 11px;
+  border: 1px solid rgba(145, 201, 165, .23);
+  border-radius: 999px;
+  color: #bfe7c9 !important;
+  background: rgba(117, 185, 139, .08);
+  font: .73rem/1 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+}
+.zarvis-quick button:hover { border-color: #75d596; background: rgba(117, 185, 139, .16); }
+.zarvis-msg { display: flex; gap: 9px; margin: 0 0 13px; animation: zarvis-message .22s ease both; }
+.zarvis-msg.user { justify-content: flex-end; }
+@keyframes zarvis-message { from { transform: translateY(5px); opacity: 0; } }
+.zarvis-avatar { width: 27px; height: 27px; display: grid; place-items: center; flex: 0 0 27px; margin-top: 2px; border-radius: 9px; color: #08100c; background: linear-gradient(135deg, #91efae, #8ea9ff); font: 800 .56rem/1 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+.zarvis-msg.user .zarvis-avatar { order: 2; background: #354b40; color: #c7e9d0; }
+.zarvis-bubble { max-width: min(82%, 480px); padding: 10px 12px; border: 1px solid rgba(145, 201, 165, .14); border-radius: 4px 14px 14px 14px; color: #d9eee0; background: rgba(112, 177, 131, .1); font: .86rem/1.55 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; white-space: pre-wrap; }
+.zarvis-msg.user .zarvis-bubble { border-radius: 14px 4px 14px 14px; color: #eaf6ed; background: rgba(91, 105, 197, .25); }
+.zarvis-stamp { display: block; margin-top: 5px; color: #739581; font-size: .62rem; }
+.zarvis-typing { display: inline-flex; gap: 4px; align-items: center; }
+.zarvis-typing i { width: 5px; height: 5px; border-radius: 50%; background: #85dda0; animation: zarvis-dot 1s infinite ease-in-out; }
+.zarvis-typing i:nth-child(2) { animation-delay: .12s; }
+.zarvis-typing i:nth-child(3) { animation-delay: .24s; }
+@keyframes zarvis-dot { 0%, 60%, 100% { opacity: .35; transform: translateY(0); } 30% { opacity: 1; transform: translateY(-3px); } }
+.zarvis-compose {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 14px calc(10px + var(--safe-b));
+  border-top: 1px solid rgba(145, 201, 165, .16);
+  background: rgba(5, 13, 12, .7);
+}
+.zarvis-input {
+  min-width: 0;
+  flex: 1;
+  height: 43px;
+  padding: 0 13px;
+  border: 1px solid rgba(145, 201, 165, .23);
+  border-radius: 13px;
+  outline: none;
+  color: #e6f8eb !important;
+  background: rgba(255, 255, 255, .055);
+  font: .88rem/1 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+}
+.zarvis-input::placeholder { color: #739581; }
+.zarvis-input:focus { border-color: #73d394; box-shadow: 0 0 0 3px rgba(115, 211, 148, .13); }
+.zarvis-mic,
+.zarvis-send {
+  width: 43px;
+  height: 43px;
+  display: grid;
+  place-items: center;
+  flex: 0 0 43px;
+  border: 1px solid rgba(145, 201, 165, .22);
+  border-radius: 13px;
+  color: #bde9c9 !important;
+  background: rgba(117, 185, 139, .1);
+  font: 1.05rem/1 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+}
+.zarvis-mic:hover,
+.zarvis-send:hover { border-color: #73d394; background: rgba(117, 185, 139, .19); }
+.zarvis-mic.listening { color: #fff !important; background: #b94962; border-color: #e47c91; box-shadow: 0 0 0 4px rgba(228, 124, 145, .14); animation: zarvis-mic-pulse 1.2s infinite; }
+@keyframes zarvis-mic-pulse { 50% { box-shadow: 0 0 0 9px rgba(228, 124, 145, .03); } }
+.zarvis-foot { padding: 0 16px 11px; color: #668473; text-align: center; font: .63rem/1.3 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; letter-spacing: .02em; }
+
+@media (max-width: 430px) {
+  .zarvis-launcher { right: 12px; padding-right: 9px; }
+  .zarvis-launcher-label { display: none; }
+  .zarvis-panel { height: 94vh; border-radius: 22px 22px 0 0; }
+  .zarvis-bubble { max-width: 86%; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .zarvis-orb { animation: none; }
+}
 </style>
 </head>
 <body>
@@ -1239,6 +1512,11 @@ mark { background: color-mix(in srgb, var(--clay) 32%, transparent); color: inhe
   <button role="tab" data-tab="journal" aria-selected="false"><span class="ic">📔</span>Journal</button>
   <button role="tab" data-tab="plus" aria-selected="false"><span class="ic">⋯</span>Plus</button>
 </nav>
+
+<button class="zarvis-launcher" id="zarvis-launcher" type="button" aria-label="Ouvrir ZARVIS" title="Ouvrir ZARVIS">
+  <span class="zarvis-orb" aria-hidden="true"><span class="zarvis-orb-core"></span></span>
+  <span class="zarvis-launcher-label">ZARVIS</span>
+</button>
 
 <script id="inflate-src">/* ==========================================================================
    Décompression gzip/DEFLATE (RFC 1951 / 1952) — implémentation autonome.
@@ -3595,7 +3873,7 @@ window.PLANS=[{"id":"bible-1an","n":"La Bible en 1 an","i":"📖","d":"Les 1 189
     var paquet = {
       format: BACKUP_TAG,
       version: 1,
-      app: "1.6.0",
+      app: "1.8.0",
       date: new Date().toISOString(),
       sceau: sceau(S.histo, S.serie ? S.serie.record : 0),
       donnees: S
@@ -3986,7 +4264,10 @@ window.PLANS=[{"id":"bible-1an","n":"La Bible en 1 an","i":"📖","d":"Les 1 189
     if (highlight) {
       setTimeout(function () {
         var t = $("#rv" + highlight, r);
-        if (t) t.scrollIntoView({ block: "center" });
+        if (t) {
+          try { t.scrollIntoView({ block: "center" }); }
+          catch (e) { /* certains navigateurs de test n'ont pas le défilement */ }
+        }
         toggleSel(highlight);
       }, 50);
     }
@@ -4175,6 +4456,14 @@ window.PLANS=[{"id":"bible-1an","n":"La Bible en 1 an","i":"📖","d":"Les 1 189
   function viewPlus() {
     var h = '<h2 class="section-h">Plus</h2><p class="section-sub">Profil, favoris, guide et réglages.</p>';
 
+    h += '<button class="card zarvis-card" id="zarvis-open-card" type="button">' +
+      '<div class="zarvis-card-main">' +
+      '<span class="zarvis-orb" aria-hidden="true"><span class="zarvis-orb-core"></span></span>' +
+      '<div><div class="zarvis-card-title">ZARVIS</div>' +
+      '<div class="zarvis-card-sub">' + esc(zt("subtitle")) +
+      ' · ' + esc(zt("foot")) + '</div></div>' +
+      '<span class="zarvis-arrow" aria-hidden="true">›</span></div></button>';
+
     // --- profil ---
     var pf = S.profil;
     h += '<div class="card"><div class="card-title">👤 Mon profil</div><div class="prof">';
@@ -4320,12 +4609,643 @@ window.PLANS=[{"id":"bible-1an","n":"La Bible en 1 an","i":"📖","d":"Les 1 189
 
     h += '<div class="card center"><div style="font-size:1.8rem">🌿</div>' +
       '<p style="margin:6px 0 2px;font-weight:600">Méditation Biblique</p>' +
-      '<p class="muted" style="font-size:.84rem;margin:0">Version 1.5.0 · fonctionne hors-ligne</p>' +
+      '<p class="muted" style="font-size:.84rem;margin:0">Version 1.8.0 · fonctionne hors-ligne</p>' +
       '<p class="muted" style="font-size:.8rem;margin:10px 0 0">Texte : ' +
       esc(versionNom(version)) + ", " + esc(versionInfo(version) ? versionInfo(version).licence : "") + ".<br>" +
       "Vos données ne quittent jamais cet appareil.</p></div>";
     return h;
   }
+
+  // --- ZARVIS : assistant personnel hors-ligne -----------------------------
+  // ZARVIS n'est pas un service distant : ses commandes texte interprètent un
+  // petit vocabulaire directement dans le navigateur et s'appuient sur les
+  // données déjà présentes dans l'application. La voix est une option fournie
+  // par le navigateur ; le champ texte reste le mode garanti sans réseau.
+  var ZARVIS_I18N = {
+    fr: {
+      kicker: "NOYAU LOCAL · HORS-LIGNE",
+      subtitle: "Votre copilote de méditation",
+      close: "Fermer ZARVIS",
+      voiceOn: "Désactiver la voix de ZARVIS",
+      voiceOff: "Activer la voix de ZARVIS",
+      ready: "SYSTÈME PRÊT · DONNÉES LOCALES UNIQUEMENT",
+      listening: "ÉCOUTE EN COURS · PARLEZ MAINTENANT",
+      welcomeTitle: "Bonjour, je suis ZARVIS",
+      welcome: "Un assistant biblique privé, inspiré des interfaces de science-fiction. Je peux piloter cette application, chercher dans la Bible, lire un passage et vous aider à méditer — les commandes texte fonctionnent sans Internet.",
+      placeholder: "Écrivez une commande à ZARVIS…",
+      microphone: "Parler à ZARVIS",
+      send: "Envoyer la commande",
+      foot: "Cœur local · commandes texte privées",
+      quickVerse: "Verset du jour",
+      quickBible: "Ouvre la Bible",
+      quickPrayer: "Une prière",
+      quickHelp: "Voir les commandes",
+      greeting: "Bonjour. ZARVIS est prêt. Que puis-je faire pour vous ?",
+      identity: "Je suis ZARVIS, votre assistant biblique local. Mon intelligence tient dans cet appareil : pas de compte, pas de serveur, pas de collecte.",
+      help: "Essayez par exemple :\n• « Ouvre la Bible »\n• « Lis Jean 3:16 »\n• « Cherche berger »\n• « Mets le verset en favori »\n• « Note : prier pour ma famille »\n• « Passe en mode nuit »\n• « Calcule 12 × 4 »\n• « Minuteur 5 minutes »\n• « Donne-moi une prière »",
+      fallback: "Je fonctionne hors-ligne : je comprends les commandes de la Bible et de cette application, mais je ne suis pas encore un chatbot généraliste.",
+      micUnavailable: "La reconnaissance vocale dépend des capacités et des réglages de ce navigateur. Utilisez le champ de commande pour rester 100 % hors-ligne.",
+      noCommand: "Je n'ai pas compris cette commande. Dites « aide » pour voir ce que je peux faire.",
+      opened: "J'ouvre",
+      searching: "Je recherche",
+      daily: "Voici votre verset du jour",
+      favoriteAdded: "Verset ajouté aux favoris.",
+      favoriteRemoved: "Verset retiré des favoris.",
+      noteSaved: "Note enregistrée dans votre journal.",
+      prayer: "Seigneur, merci pour cette journée. Donne-moi un cœur attentif à ta Parole, la force de mettre en pratique ce que je comprends et la paix pour avancer aujourd'hui. Amen.",
+      noErase: "Je ne supprime jamais vos données par une simple commande vocale. Ouvrez Réglages pour gérer vos données en toute sécurité.",
+      currentVersion: "La version biblique active est",
+      currentTheme: "Le thème actuel est",
+      night: "nuit",
+      day: "jour",
+      stats: "Vous avez médité {total} jour(s), votre série actuelle est de {serie} et votre record est de {record}.",
+      reminder: "J'ouvre les réglages pour configurer votre rappel quotidien."
+    },
+    en: {
+      kicker: "LOCAL CORE · OFFLINE",
+      subtitle: "Your meditation copilot",
+      close: "Close ZARVIS",
+      voiceOn: "Turn off ZARVIS voice",
+      voiceOff: "Turn on ZARVIS voice",
+      ready: "SYSTEM READY · LOCAL DATA ONLY",
+      listening: "LISTENING · SPEAK NOW",
+      welcomeTitle: "Hello, I am ZARVIS",
+      welcome: "A private Bible assistant inspired by science-fiction interfaces. I can control this app, search the Bible, read a passage and help you meditate — text commands work without the Internet.",
+      placeholder: "Type a command for ZARVIS…",
+      microphone: "Talk to ZARVIS",
+      send: "Send command",
+      foot: "Local core · private text commands",
+      quickVerse: "Today's verse",
+      quickBible: "Open the Bible",
+      quickPrayer: "A prayer",
+      quickHelp: "Show commands",
+      greeting: "Hello. ZARVIS is ready. What can I do for you?",
+      identity: "I am ZARVIS, your local Bible assistant. My intelligence stays on this device: no account, no server, no tracking.",
+      help: "Try for example:\n• “Open the Bible”\n• “Read John 3:16”\n• “Search shepherd”\n• “Add the verse to favourites”\n• “Note: pray for my family”\n• “Turn on night mode”\n• “Calculate 12 × 4”\n• “Timer 5 minutes”\n• “Give me a prayer”",
+      fallback: "I work offline: I understand Bible and app commands, but I am not a general chatbot yet.",
+      micUnavailable: "Speech recognition depends on this browser's capabilities and settings. Use the command field to stay 100% offline.",
+      noCommand: "I did not understand that command. Say “help” to see what I can do.",
+      opened: "Opening",
+      searching: "Searching",
+      daily: "Here is today's verse",
+      favoriteAdded: "Verse added to favourites.",
+      favoriteRemoved: "Verse removed from favourites.",
+      noteSaved: "Note saved in your journal.",
+      prayer: "Lord, thank you for this day. Give me an attentive heart for your Word, strength to live what I understand and peace to move forward today. Amen.",
+      noErase: "I never delete your data from a simple voice command. Open Settings to manage your data safely.",
+      currentVersion: "The active Bible version is",
+      currentTheme: "The current theme is",
+      night: "night",
+      day: "day",
+      stats: "You have meditated for {total} day(s), your current streak is {serie} and your record is {record}.",
+      reminder: "Opening settings so you can configure your daily reminder."
+    }
+  };
+
+  var ZARVIS = {
+    open: false,
+    voice: true,
+    listening: false,
+    recognition: null,
+    timer: null,
+    history: []
+  };
+
+  function zt(key) {
+    var table = ZARVIS_I18N[langue] || ZARVIS_I18N.fr;
+    return table[key] !== undefined ? table[key] : ZARVIS_I18N.fr[key] || key;
+  }
+
+  function zreplace(text, values) {
+    return String(text).replace(/\{(\w+)\}/g, function (all, key) {
+      return values[key] !== undefined ? values[key] : all;
+    });
+  }
+
+  function zarvisNormaliser(text) {
+    return norm(String(text || ""))
+      .replace(/[!?.,;:()[\]{}«»“”]/g, " ")
+      .replace(/\s+/g, " ")
+      .trim();
+  }
+
+  function zarvisQuickHtml() {
+    var cmds = [
+      [zt("quickVerse"), langue === "en" ? "What is today's verse?" : "Quel est le verset du jour ?"],
+      [zt("quickBible"), langue === "en" ? "Open the Bible" : "Ouvre la Bible"],
+      [zt("quickPrayer"), langue === "en" ? "Give me a prayer" : "Donne-moi une prière"],
+      [zt("quickHelp"), langue === "en" ? "Help" : "Aide"]
+    ];
+    return '<div class="zarvis-quick">' + cmds.map(function (c) {
+      return '<button type="button" data-zcommand="' + esc(c[1]) + '">' + esc(c[0]) + "</button>";
+    }).join("") + "</div>";
+  }
+
+  function zarvisRenderLog() {
+    var log = $("#zarvis-log");
+    if (!log) return;
+    var h = "";
+    if (!ZARVIS.history.length) {
+      h += '<div class="zarvis-welcome">' +
+        '<span class="zarvis-orb zarvis-big-orb" aria-hidden="true"><span class="zarvis-orb-core"></span></span>' +
+        '<h2>' + esc(zt("welcomeTitle")) + "</h2>" +
+        '<p>' + esc(zt("welcome")) + "</p>" + zarvisQuickHtml() + "</div>";
+    } else {
+      ZARVIS.history.forEach(function (m) {
+        var user = m.role === "user";
+        h += '<div class="zarvis-msg ' + (user ? "user" : "zarvis") + '">' +
+          '<span class="zarvis-avatar" aria-hidden="true">' + (user ? "VOUS" : "Z") + "</span>" +
+          '<div class="zarvis-bubble">' + esc(m.text) +
+          '<span class="zarvis-stamp">' + (user ? "VOUS" : "ZARVIS") + "</span></div></div>";
+      });
+      h += zarvisQuickHtml();
+    }
+    log.innerHTML = h;
+    log.scrollTop = log.scrollHeight;
+  }
+
+  function zarvisUpdateControls() {
+    var bg = $("#zarvis-bg");
+    if (!bg) return;
+    var voice = $("#zarvis-voice", bg);
+    var mic = $("#zarvis-mic", bg);
+    var status = $("#zarvis-status", bg);
+    if (voice) {
+      voice.textContent = ZARVIS.voice ? "🔊" : "🔇";
+      voice.setAttribute("aria-label", ZARVIS.voice ? zt("voiceOn") : zt("voiceOff"));
+      voice.setAttribute("title", ZARVIS.voice ? zt("voiceOn") : zt("voiceOff"));
+      voice.classList.toggle("on", ZARVIS.voice);
+    }
+    if (mic) {
+      var C = window.SpeechRecognition || window.webkitSpeechRecognition;
+      mic.disabled = typeof C !== "function";
+      mic.setAttribute("aria-label", zt("microphone"));
+      mic.title = zt("microphone");
+      mic.classList.toggle("listening", ZARVIS.listening);
+    }
+    if (status) status.textContent = ZARVIS.listening ? zt("listening") : zt("ready");
+  }
+
+  function zarvisReply(text, speakIt) {
+    text = String(text || zt("noCommand"));
+    ZARVIS.history.push({ role: "zarvis", text: text });
+    if (ZARVIS.history.length > 40) ZARVIS.history = ZARVIS.history.slice(-40);
+    zarvisRenderLog();
+    if (speakIt !== false && ZARVIS.voice) zarvisSay(text);
+  }
+
+  function zarvisSay(text) {
+    if (!("speechSynthesis" in window) || typeof SpeechSynthesisUtterance !== "function") return;
+    var synth = window.speechSynthesis;
+    var u = new SpeechSynthesisUtterance(normaliserPonctuation(text));
+    u.lang = langue === "en" ? "en-US" : "fr-FR";
+    u.rate = .96;
+    var voices = voixTriees();
+    for (var i = 0; i < voices.length; i++) {
+      if (new RegExp("^" + (langue === "en" ? "en" : "fr"), "i").test(voices[i].lang || "")) {
+        u.voice = voices[i];
+        break;
+      }
+    }
+    try { synth.cancel(); synth.speak(u); } catch (e) { /* voix facultative */ }
+  }
+
+  function zarvisClose() {
+    var bg = $("#zarvis-bg");
+    if (ZARVIS.recognition) {
+      try { ZARVIS.recognition.stop(); } catch (e) { /* déjà arrêté */ }
+      ZARVIS.recognition = null;
+    }
+    ZARVIS.listening = false;
+    ZARVIS.open = false;
+    if (bg) bg.remove();
+    if (!$(".reader") && !$(".sheet-bg")) document.body.style.overflow = "";
+  }
+
+  function zarvisOpen() {
+    if (ZARVIS.open) return;
+    closeSheet();
+    ZARVIS.open = true;
+    var bg = el('<div class="zarvis-bg" id="zarvis-bg" role="dialog" aria-modal="true" aria-labelledby="zarvis-title">' +
+      '<section class="zarvis-panel">' +
+      '<header class="zarvis-head">' +
+      '<button class="zarvis-close" id="zarvis-close" type="button" aria-label="' + esc(zt("close")) + '">✕</button>' +
+      '<span class="zarvis-orb" aria-hidden="true"><span class="zarvis-orb-core"></span></span>' +
+      '<div class="zarvis-head-copy"><div class="zarvis-kicker">' + esc(zt("kicker")) +
+      '</div><div class="zarvis-title" id="zarvis-title">ZARVIS</div><div class="zarvis-subtitle">' +
+      esc(zt("subtitle")) + '</div></div>' +
+      '<button class="zarvis-voice on" id="zarvis-voice" type="button">🔊</button>' +
+      '</header>' +
+      '<div class="zarvis-scan"><span class="zarvis-scan-dot"></span><span id="zarvis-status"></span></div>' +
+      '<div class="zarvis-body" id="zarvis-log"></div>' +
+      '<form class="zarvis-compose" id="zarvis-compose">' +
+      '<button class="zarvis-mic" id="zarvis-mic" type="button">🎙</button>' +
+      '<input class="zarvis-input" id="zarvis-input" autocomplete="off" enterkeyhint="send" placeholder="' +
+      esc(zt("placeholder")) + '">' +
+      '<button class="zarvis-send" type="submit" aria-label="' + esc(zt("send")) + '" title="' +
+      esc(zt("send")) + '">➤</button>' +
+      '</form>' +
+      '<div class="zarvis-foot">' + esc(zt("foot")) + "</div>" +
+      '</section></div>');
+    document.body.appendChild(bg);
+    document.body.style.overflow = "hidden";
+    zarvisRenderLog();
+    zarvisUpdateControls();
+
+    bg.addEventListener("click", function (e) {
+      if (e.target === bg || e.target.closest("#zarvis-close")) { zarvisClose(); return; }
+      var q = e.target.closest("[data-zcommand]");
+      if (q) { zarvisCommand(q.dataset.zcommand); return; }
+      if (e.target.closest("#zarvis-voice")) {
+        ZARVIS.voice = !ZARVIS.voice;
+        if (!ZARVIS.voice && "speechSynthesis" in window) {
+          try { window.speechSynthesis.cancel(); } catch (er) { /* rien */ }
+        }
+        zarvisUpdateControls();
+      }
+      if (e.target.closest("#zarvis-mic")) zarvisListen();
+    });
+    $("#zarvis-compose", bg).addEventListener("submit", function (e) {
+      e.preventDefault();
+      var input = $("#zarvis-input", bg);
+      if (!input || !input.value.trim()) return;
+      var command = input.value.trim();
+      input.value = "";
+      zarvisCommand(command);
+    });
+    setTimeout(function () {
+      var input = $("#zarvis-input", bg);
+      if (input) input.focus();
+    }, 160);
+  }
+
+  function zarvisListen() {
+    if (!ZARVIS.open) return;
+    var C = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (typeof C !== "function") { zarvisReply(zt("micUnavailable"), false); return; }
+    if (ZARVIS.recognition) {
+      try { ZARVIS.recognition.stop(); } catch (e) {}
+      return;
+    }
+    var r;
+    try { r = new C(); } catch (e) { zarvisReply(zt("micUnavailable"), false); return; }
+    ZARVIS.recognition = r;
+    r.lang = langue === "en" ? "en-US" : "fr-FR";
+    r.continuous = false;
+    r.interimResults = false;
+    r.maxAlternatives = 1;
+    r.onstart = function () {
+      ZARVIS.listening = true;
+      zarvisUpdateControls();
+    };
+    r.onresult = function (e) {
+      var transcript = e && e.results && e.results[0] && e.results[0][0] && e.results[0][0].transcript;
+      if (transcript) {
+        var input = $("#zarvis-input");
+        if (input) input.value = transcript;
+        zarvisCommand(transcript);
+      }
+    };
+    r.onerror = function () {
+      ZARVIS.listening = false;
+      ZARVIS.recognition = null;
+      zarvisUpdateControls();
+      zarvisReply(zt("micUnavailable"), false);
+    };
+    r.onend = function () {
+      ZARVIS.listening = false;
+      ZARVIS.recognition = null;
+      zarvisUpdateControls();
+    };
+    try { r.start(); }
+    catch (e) {
+      ZARVIS.listening = false;
+      ZARVIS.recognition = null;
+      zarvisUpdateControls();
+      zarvisReply(zt("micUnavailable"), false);
+    }
+  }
+
+  // Cherche une référence biblique même au milieu d'une phrase (« lis Jean 3:16 »).
+  function zarvisReference(raw) {
+    var mots = String(raw || "")
+      .replace(/[«»“”?!]/g, " ")
+      .split(/\s+/)
+      .filter(function (x) { return !!x; });
+    for (var i = 0; i < mots.length; i++) {
+      for (var j = mots.length; j > i; j--) {
+        var morceau = mots.slice(i, j).join(" ").replace(/[.,;:]+$/, function (x) {
+          return x === ":" ? x : "";
+        });
+        var p = chercherReference(morceau);
+        if (p && (p.v || /\d+\s*$/.test(morceau))) return p;
+      }
+    }
+    return null;
+  }
+
+  function zarvisRef(p) {
+    return p.a + " " + p.c + (p.v ? ":" + p.v + (p.v2 && p.v2 !== p.v ? "-" + p.v2 : "") : "");
+  }
+
+  function zarvisCurrentRef() {
+    var d = new Date();
+    var perso = S.perso && S.perso.actif !== false ? persoRefFor(d) : null;
+    return perso ? perso.ref : dailyRefFor(d);
+  }
+
+  function zarvisOpenReference(p) {
+    var ref = zarvisRef(p);
+    zarvisReply(zt("opened") + " " + refLabel(ref) + ".");
+    setTimeout(function () {
+      zarvisClose();
+      openReader(p.a, p.c, p.v || null);
+    }, 220);
+  }
+
+  function zarvisFindVersion(query) {
+    var needle = zarvisNormaliser(query);
+    if (!needle) return null;
+    var found = null;
+    VERSIONS.some(function (v) {
+      var names = [v.id, v.nfr, v.nen];
+      return names.some(function (name) {
+        if (zarvisNormaliser(name).indexOf(needle) !== -1 || needle.indexOf(zarvisNormaliser(name)) !== -1) {
+          found = v;
+          return true;
+        }
+        return false;
+      });
+    });
+    return found;
+  }
+
+  function zarvisFindTheme(query) {
+    var needle = zarvisNormaliser(query);
+    if (!needle) return null;
+    return (window.THEMES || []).filter(function (item) {
+      return [item.id, item.n, item.ne].some(function (value) {
+        return value && (zarvisNormaliser(value).indexOf(needle) !== -1 || needle.indexOf(zarvisNormaliser(value)) !== -1);
+      });
+    })[0] || null;
+  }
+
+  // Petit calculateur local : on utilise une pile, jamais eval() ni un serveur.
+  function zarvisCalculer(expression) {
+    var expr = String(expression || "").replace(/,/g, ".").replace(/[×x]/g, "*").replace(/÷/g, "/").trim();
+    if (!expr || !/^[0-9+\-*/().\s]+$/.test(expr)) return null;
+    var tokens = expr.match(/\d+(?:\.\d+)?|[()+\-*/]/g);
+    if (!tokens) return null;
+    var valeurs = [], operateurs = [];
+    var priorite = { "+": 1, "-": 1, "*": 2, "/": 2 };
+    function appliquer() {
+      var op = operateurs.pop();
+      var b = valeurs.pop(), a = valeurs.pop();
+      if (a === undefined || b === undefined || op === "/" && b === 0) return false;
+      valeurs.push(op === "+" ? a + b : op === "-" ? a - b : op === "*" ? a * b : a / b);
+      return true;
+    }
+    var precedent = "(";
+    for (var i = 0; i < tokens.length; i++) {
+      var token = tokens[i];
+      if (/^\d/.test(token)) {
+        valeurs.push(+token);
+        precedent = "n";
+      } else if (token === "(") {
+        operateurs.push(token);
+        precedent = "(";
+      } else if (token === ")") {
+        while (operateurs.length && operateurs[operateurs.length - 1] !== "(") {
+          if (!appliquer()) return null;
+        }
+        if (operateurs.pop() !== "(") return null;
+        precedent = "n";
+      } else {
+        // Le signe moins unaire est traité comme 0 - nombre.
+        if (token === "-" && (precedent === "(" || precedent === "o")) valeurs.push(0);
+        while (operateurs.length && operateurs[operateurs.length - 1] !== "(" &&
+               priorite[operateurs[operateurs.length - 1]] >= priorite[token]) {
+          if (!appliquer()) return null;
+        }
+        operateurs.push(token);
+        precedent = "o";
+      }
+    }
+    while (operateurs.length) {
+      if (operateurs[operateurs.length - 1] === "(" || !appliquer()) return null;
+    }
+    if (valeurs.length !== 1 || !isFinite(valeurs[0])) return null;
+    return Math.round(valeurs[0] * 100000000) / 100000000;
+  }
+
+  function zarvisCommand(raw) {
+    raw = String(raw || "").trim();
+    if (!raw || !ZARVIS.open) return;
+    ZARVIS.history.push({ role: "user", text: raw });
+    if (ZARVIS.history.length > 40) ZARVIS.history = ZARVIS.history.slice(-40);
+    zarvisRenderLog();
+    if (!BOOKS) inflate();
+    var n = zarvisNormaliser(raw);
+    var ref = zarvisReference(raw);
+
+    if (/^(aide|help|commandes|que peux tu faire|what can you do)/.test(n)) {
+      zarvisReply(zt("help")); return;
+    }
+    if (/(qui es tu|qui es-tu|ton nom|who are you|your name)/.test(n)) {
+      zarvisReply(zt("identity")); return;
+    }
+    if (/^(bonjour|salut|hello|bonsoir|coucou|hey)\b/.test(n) && n.split(" ").length < 6) {
+      zarvisReply(zt("greeting")); return;
+    }
+    if (/(quelle heure|quelle est l heure|what time|current time)/.test(n)) {
+      zarvisReply((langue === "en" ? "It is " : "Il est ") + new Date().toLocaleTimeString(langue === "en" ? "en-US" : "fr-FR", { hour: "2-digit", minute: "2-digit" }) + ".");
+      return;
+    }
+    if (/(quelle date|quel jour sommes nous|what date|what day)/.test(n)) {
+      zarvisReply((langue === "en" ? "Today is " : "Nous sommes ") + frDate(new Date()) + ".");
+      return;
+    }
+    if (/(comment je m appelle|quel est mon nom|what is my name|who am i)/.test(n)) {
+      zarvisReply(prenom()
+        ? (langue === "en" ? "You are " : "Vous êtes ") + prenom() + "."
+        : (langue === "en" ? "I do not know your name yet." : "Je ne connais pas encore votre prénom."), false);
+      return;
+    }
+    if (/(statut du systeme|diagnostic|system status|system check)/.test(n)) {
+      zarvisReply((langue === "en" ? "ZARVIS // all systems nominal. Bible, journal and commands are local. " :
+        "ZARVIS // tous les systèmes sont nominaux. Bible, journal et commandes sont locaux. ") +
+        (BOOKS ? (langue === "en" ? "66 books ready." : "66 livres prêts.") :
+          (langue === "en" ? "Bible loading." : "Bible en cours de chargement.")), false);
+      return;
+    }
+    var calculMatch = /^(?:calcule|calculer|combien font|calculate)\s+(.+)$/i.exec(raw);
+    if (calculMatch) {
+      var resultat = zarvisCalculer(calculMatch[1]);
+      zarvisReply(resultat === null
+        ? (langue === "en" ? "I can only calculate simple arithmetic locally." : "Je peux seulement calculer une opération arithmétique simple hors-ligne.")
+        : (langue === "en" ? "The result is " : "Le résultat est ") + resultat + ".", false);
+      return;
+    }
+
+    // Une référence explicite a priorité sur la recherche plein texte.
+    if (ref && /(lis|lire|ecoute|écoute|ouvre|montre|affiche|read|listen|open|show|cherche|recherche|search)/.test(n)) {
+      zarvisOpenReference(ref); return;
+    }
+    if (ref && /^(?:[1-3]\s*)?[a-zà-ÿ]/i.test(raw.trim())) {
+      zarvisOpenReference(ref); return;
+    }
+
+    if (/(verset du jour|verset d aujourd hui|today'?s verse|verse of the day)/.test(n)) {
+      var todayRef = zarvisCurrentRef();
+      var todayText = verseText(todayRef);
+      zarvisReply(zt("daily") + " :\n« " + todayText + " »\n— " + refLabel(todayRef));
+      return;
+    }
+    if (/(lis|lire|ecoute|écoute|read|listen)/.test(n) && /(verset|verse)/.test(n)) {
+      var listenRef = zarvisCurrentRef();
+      zarvisReply((langue === "en" ? "Here is " : "Voici ") + refLabel(listenRef) + " :\n« " +
+        verseText(listenRef) + " »");
+      return;
+    }
+
+    var searchMatch = /^(?:cherche|recherche|search)(?: dans (?:la )?bible| in the bible)?\s+(.+)$/i.exec(raw);
+    if (searchMatch) {
+      var query = searchMatch[1].trim();
+      zarvisReply(zt("searching") + " « " + query + " ».", false);
+      current = "bible";
+      offset = 0;
+      render();
+      var q = $("#q");
+      if (q) { q.value = query; search(query); }
+      return;
+    }
+
+    var themeMatch = /(?:ouvre|affiche|montre|open|show)?\s*(?:le\s+|la\s+)?(?:theme|thème)\s+(.+)$/i.exec(raw);
+    if (themeMatch && !/^(?:nuit|jour|auto|automatic)$/i.test(zarvisNormaliser(themeMatch[1]))) {
+      var chosenTheme = zarvisFindTheme(themeMatch[1]);
+      if (chosenTheme) {
+        zarvisReply((langue === "en" ? "Opening the theme " : "J'ouvre le thème ") + loc(chosenTheme, "n") + ".", false);
+        setTimeout(function () { zarvisClose(); openTheme(chosenTheme.id); }, 220);
+        return;
+      }
+    }
+
+    var route = null;
+    if (/\b(ma meditation|ma medit|personal meditation|my meditation)\b/.test(n)) route = "perso";
+    else if (/\b(plan|plans|reading plan)\b/.test(n)) route = "plans";
+    else if (/\b(theme|themes|thème|thèmes)\b/.test(n)) route = "themes";
+    else if (/\b(bible|explorateur|explore|scripture)\b/.test(n)) route = "bible";
+    else if (/\b(journal|note|notes|diary)\b/.test(n) && !/^note\b/.test(n)) route = "journal";
+    else if (/\b(progression|progress|statistiques|stats|badges)\b/.test(n)) route = "progres";
+    else if (/\b(reglages|réglages|settings|plus)\b/.test(n)) route = "plus";
+    else if (/\b(accueil|aujourd hui|home|today)\b/.test(n)) route = "jour";
+    if (route && /\b(ouvre|affiche|montre|va|open|show|go|view|retourne|back)\b/.test(n)) {
+      current = route;
+      offset = 0;
+      render();
+      zarvisReply((langue === "en" ? "Opening " : "J'ouvre ") +
+        ({ jour: "l'accueil", perso: "votre méditation", plans: "les plans", themes: "les thèmes", bible: "la Bible", journal: "le journal", progres: "votre progression", plus: "les réglages" }[route] || route) + ".", false);
+      return;
+    }
+
+    if (/(verset|verse).*(favori|favorite)|favori|favorite|star|etoile|étoile/.test(n)) {
+      var favRef = zarvisCurrentRef();
+      var wasFav = isFav(favRef);
+      toggleFav(favRef);
+      zarvisReply(zt(wasFav ? "favoriteRemoved" : "favoriteAdded") + " (" + refLabel(favRef) + ").", false);
+      return;
+    }
+
+    var noteMatch = /^(?:note|ecris dans mon journal|écris dans mon journal|ajoute une note|write a note)\s*(?::|que|que )?\s*(.*)$/i.exec(raw);
+    if (noteMatch) {
+      var noteText = noteMatch[1].trim();
+      var noteRef = zarvisCurrentRef();
+      if (!noteText) {
+        zarvisReply((langue === "en" ? "Opening a note for " : "J'ouvre une note pour ") + refLabel(noteRef) + ".", false);
+        setTimeout(function () { zarvisClose(); noteSheet(noteRef); }, 220);
+      } else {
+        addNote(noteRef, noteText, []);
+        zarvisReply(zt("noteSaved") + " (" + refLabel(noteRef) + ").", false);
+      }
+      return;
+    }
+
+    var timerMatch = /(?:minuteur|timer).*?(\d+)\s*(secondes?|seconds?|sec|s|minutes?|mins?|min)?/i.exec(raw);
+    if (timerMatch) {
+      var amount = +timerMatch[1];
+      var unit = (timerMatch[2] || "minutes").toLowerCase();
+      var milliseconds = /^(?:s|sec|secs|seconde|secondes|second|seconds)$/i.test(unit)
+        ? amount * 1000 : amount * 60000;
+      if (amount > 0 && amount <= 1440) {
+        clearTimeout(ZARVIS.timer);
+        ZARVIS.timer = setTimeout(function () {
+          toast((langue === "en" ? "ZARVIS timer finished." : "Minuteur ZARVIS terminé.") + " ⏱");
+        }, milliseconds);
+        zarvisReply((langue === "en" ? "Timer set for " : "Minuteur réglé pour ") + amount + " " + unit + ".", false);
+      } else zarvisReply(langue === "en" ? "Choose a duration between 1 and 1440." : "Choisissez une durée entre 1 et 1440.", false);
+      return;
+    }
+
+    if (/(mode nuit|theme nuit|dark mode|night mode|active.*nuit|turn on night)/.test(n)) {
+      S.reglages.theme = "nuit"; save(); applySettings(); render();
+      zarvisReply((langue === "en" ? "Night mode enabled." : "Mode nuit activé."), false); return;
+    }
+    if (/(mode jour|theme jour|light mode|day mode|desactive.*nuit|turn off night)/.test(n)) {
+      S.reglages.theme = "jour"; save(); applySettings(); render();
+      zarvisReply((langue === "en" ? "Day mode enabled." : "Mode jour activé."), false); return;
+    }
+    if (/(mode auto|theme auto|automatic theme|auto mode)/.test(n)) {
+      S.reglages.theme = "auto"; save(); applySettings(); render();
+      zarvisReply((langue === "en" ? "Automatic theme enabled." : "Thème automatique activé."), false); return;
+    }
+
+    if (/(quelle version|version actuelle|current version|which version)/.test(n) && !/change|passe|switch|use/.test(n)) {
+      zarvisReply(zt("currentVersion") + " " + versionNom(version) + ".", false); return;
+    }
+    var versionMatch = /(?:version|traduction|translation)\s+(.+)$/i.exec(raw);
+    if (versionMatch) {
+      var targetVersion = zarvisFindVersion(versionMatch[1]);
+      if (targetVersion) {
+        changerVersion(targetVersion.id);
+        zarvisReply((langue === "en" ? "Bible version changed to " : "Version biblique changée : ") + versionNom(targetVersion.id) + ".", false);
+      } else zarvisReply(langue === "en" ? "I could not find that Bible version." : "Je ne trouve pas cette version biblique.", false);
+      return;
+    }
+
+    if (/(donne moi une priere|donne moi une prière|une priere|une prière|pray for me|give me a prayer)/.test(n)) {
+      zarvisReply(zt("prayer")); return;
+    }
+    if (/(ma progression|mes statistiques|how am i doing|my progress|stats)/.test(n)) {
+      var st = statsProgression();
+      zarvisReply(zreplace(zt("stats"), { total: st.total, serie: st.serie, record: st.record }), false); return;
+    }
+    if (/(rappel|reminder)/.test(n)) {
+      current = "plus"; offset = 0; render();
+      zarvisReply(zt("reminder"), false); return;
+    }
+    if (/(supprime tout|efface tout|erase everything|delete all)/.test(n)) {
+      zarvisReply(zt("noErase"), false); return;
+    }
+    if (/(arrete la voix|stop audio|silence|be quiet)/.test(n)) {
+      ZARVIS.voice = false;
+      try { if ("speechSynthesis" in window) window.speechSynthesis.cancel(); } catch (e) {}
+      zarvisUpdateControls();
+      zarvisReply(langue === "en" ? "Voice responses muted." : "Réponses vocales désactivées.", false); return;
+    }
+
+    zarvisReply(zt("fallback") + "\n\n" + zt("noCommand"), false);
+  }
+
+  function setupZarvis() {
+    var launcher = $("#zarvis-launcher");
+    if (!launcher || launcher.dataset.ready) return;
+    launcher.dataset.ready = "1";
+    launcher.addEventListener("click", zarvisOpen);
+  }
+
+  document.addEventListener("keydown", function (e) {
+    if (e.key === "Escape" && $("#zarvis-bg")) zarvisClose();
+  });
 
   // --- Rendu ---------------------------------------------------------------
   var VIEWS = {
@@ -4506,6 +5426,12 @@ window.PLANS=[{"id":"bible-1an","n":"La Bible en 1 an","i":"📖","d":"Les 1 189
       dk.setAttribute("aria-label", t("set.theme"));
       dk.setAttribute("title", t("set.theme"));
     }
+    var zl = $("#zarvis-launcher");
+    if (zl) {
+      var zlabel = langue === "en" ? "Open ZARVIS" : "Ouvrir ZARVIS";
+      zl.setAttribute("aria-label", zlabel);
+      zl.setAttribute("title", zlabel);
+    }
   }
 
   // Change la version affichée : on décompresse à la demande puis on redessine.
@@ -4652,6 +5578,7 @@ window.PLANS=[{"id":"bible-1an","n":"La Bible en 1 an","i":"📖","d":"Les 1 189
   });
 
   document.addEventListener("click", function (e) {
+    if (e.target.closest("#zarvis-open-card")) { zarvisOpen(); return; }
     if (e.target.closest("#jexport") || e.target.closest("#jexport2")) exportJournal();
     if (e.target.closest("#go-progres")) { current = "progres"; offset = 0; render(); }
     if (e.target.closest("#pwa-install")) lancerInstallation();
@@ -4867,6 +5794,7 @@ window.PLANS=[{"id":"bible-1an","n":"La Bible en 1 an","i":"📖","d":"Les 1 189
       } catch (e) { /* ancien moteur de synthèse */ }
     }
     setupPWA();
+    setupZarvis();
     planifierRappel();
   }
 
@@ -4942,7 +5870,13 @@ window.PLANS=[{"id":"bible-1an","n":"La Bible en 1 an","i":"📖","d":"Les 1 189
     verseTextIn: verseTextIn,
     mapVerset: mapVerset,
     t: t,
-    comparerSheet: comparerSheet
+    comparerSheet: comparerSheet,
+    // assistant local ZARVIS
+    zarvis: function () { return ZARVIS; },
+    zarvisOpen: zarvisOpen,
+    zarvisClose: zarvisClose,
+    zarvisCommand: zarvisCommand,
+    zarvisCalculate: zarvisCalculer
   };
 })();
 </script>

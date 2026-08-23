@@ -4,7 +4,7 @@
 
 **Application web de méditation biblique quotidienne — 100 % hors-ligne, en français et en anglais.**
 
-**12 versions de la Bible** (domaine public) · interface **bilingue FR/EN** · Version 1.7.0 · Licence MIT
+**12 versions de la Bible** (domaine public) · interface **bilingue FR/EN** · **ZARVIS hors-ligne** · Version 1.8.0 · Licence MIT
 
 </div>
 
@@ -22,6 +22,25 @@ Double-cliquez sur index.html  →  l'application démarre
 
 Publiable tel quel sur GitHub Pages, Netlify, une clé USB ou envoyé par WhatsApp.
 
+### ZARVIS — le copilote local
+
+Touchez le bouton **ZARVIS** pour ouvrir le centre de commande. Il ne s'agit pas d'une
+IA distante : son interpréteur fonctionne dans le navigateur, sans compte, clé API ou
+serveur. Il accepte le clavier et, lorsque le navigateur le permet, la reconnaissance
+vocale via l'API du navigateur. Le champ texte reste le mode garanti 100 % hors-ligne ;
+le traitement de l'audio dépend des capacités et des réglages du navigateur.
+
+Exemples de commandes :
+
+- `Ouvre la Bible`, `Ouvre ma méditation`, `Ouvre ma progression`
+- `Lis Jean 3:16`, `Cherche berger`, `Ouvre le thème paix`
+- `Mets le verset en favori`, `Note : prier pour ma famille`
+- `Passe en mode nuit`, `Calcule 12 × 4`, `Minuteur 5 minutes`
+- `Donne-moi une prière`, `Quelle heure est-il ?`, `Aide`
+
+ZARVIS pilote seulement les fonctions disponibles localement et répond honnêtement
+lorsqu'une demande nécessite Internet ou une intelligence générale.
+
 ---
 
 ## 🙏 Fonctionnalités
@@ -32,6 +51,7 @@ Publiable tel quel sur GitHub Pages, Netlify, une clé USB ou envoyé par WhatsA
 | 🌅 **Verset du jour** | Rotation sur **247 versets** choisis · navigation vers les jours précédents |
 | 🎯 **Ma méditation personnalisée** | Choisissez un **chapitre** ou un **livre entier** · méthode 📆 **Suivi** (dans l'ordre, avec cycle en fin de passage) ou 🎲 **Aléatoire** (jamais le verset de la veille, découvertes comptabilisées) · bascule à tout moment avec le verset du jour général |
 | 🔊 **Écoute audio** | Synthèse vocale française (Web Speech API) · **chapitre entier** lu d'un trait, verset surligné au fil de la lecture, pause, vitesse réglable · ponctuation adaptée à l'oral, respiration entre les versets, garde anti-coupure Chrome |
+| 🤖 **ZARVIS** | Assistant personnel biblique au look futuriste : commandes texte **100 % hors-ligne** ou commandes vocales si le navigateur les prend en charge pour ouvrir les vues, lire un passage, rechercher un mot, créer une note, gérer les favoris, changer le thème, calculer et lancer un minuteur |
 | 📖 **16 plans de lecture** | Bible en 1 an (1 189 chapitres, ~4/jour) · NT en 90 j · Évangiles en 40 j · Psaumes en 30 j · Proverbes en 31 j · **Sagesse en 30 j** · **Épîtres en 60 j** · 9 plans thématiques de 7 j |
 | 🌸 **24 thèmes** | 336 versets sélectionnés : foi, pardon, joie, prière, épreuve, humilité, **deuil, travail, argent, identité, persévérance**… |
 | 📔 **Journal de méditation** | Notes privées gardées sur l'appareil · **recherche**, **6 étiquettes** (promesse, prière, exaucé…), modification · rappel « **il y a un an, jour pour jour** » · export en fichier texte |
@@ -85,6 +105,12 @@ La carte-image est dessinée sur l'appareil, le rappel est un simple minuteur lo
 et la sauvegarde est un fichier que **vous** enregistrez où vous voulez.
 Profil, journal, favoris, surlignages et progression vivent dans le `localStorage` du navigateur.
 Le code ne contient ni `fetch`, ni `XMLHttpRequest` — c'est vérifié par les tests.
+
+Les commandes **texte** de ZARVIS sont interprétées sur l'appareil. La saisie vocale
+optionnelle passe par l'API de reconnaissance vocale fournie par le navigateur : selon
+le navigateur, le système et ses réglages, elle peut nécessiter un service de reconnaissance.
+Pour une confidentialité et un fonctionnement hors-ligne garantis, utilisez le champ texte
+ou laissez le microphone désactivé.
 
 L'« inscription » est **purement locale** : elle ne demande ni e-mail, ni mot de passe, et ne crée
 aucun compte en ligne. C'est un profil d'affichage, stocké sur l'appareil, que l'on peut passer,
