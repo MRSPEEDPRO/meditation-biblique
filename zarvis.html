@@ -1,0 +1,970 @@
+<!DOCTYPE html>
+<html lang="fr" data-theme="dark">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#05090e">
+<meta name="description" content="ZARVIS — assistant personnel autonome, privé et hors-ligne.">
+<title>ZARVIS — Autonomous Intelligence</title>
+<style>
+/* ========================================================================
+   ZARVIS — interface autonome
+   Aucun fichier externe. Le cœur texte fonctionne sans réseau.
+   ======================================================================== */
+:root {
+  color-scheme: dark;
+  --bg: #05090e;
+  --bg-2: #081118;
+  --panel: rgba(10, 19, 28, .86);
+  --panel-solid: #0b151f;
+  --panel-2: rgba(17, 30, 42, .72);
+  --line: rgba(128, 185, 211, .18);
+  --line-strong: rgba(104, 232, 255, .42);
+  --text: #e8f8ff;
+  --muted: #86a5b4;
+  --muted-2: #527180;
+  --cyan: #68ebff;
+  --cyan-soft: #a3f5ff;
+  --violet: #a78bff;
+  --green: #7df2af;
+  --amber: #ffc46b;
+  --red: #ff738d;
+  --shadow: 0 18px 55px rgba(0, 0, 0, .35);
+  --glow: 0 0 24px rgba(104, 235, 255, .2);
+  --radius: 16px;
+  --max: 1480px;
+  --safe-b: env(safe-area-inset-bottom, 0px);
+  --safe-t: env(safe-area-inset-top, 0px);
+}
+[data-theme="light"] {
+  color-scheme: light;
+  --bg: #eaf3f6;
+  --bg-2: #f8fcfd;
+  --panel: rgba(255, 255, 255, .86);
+  --panel-solid: #ffffff;
+  --panel-2: rgba(234, 246, 249, .88);
+  --line: rgba(25, 83, 102, .18);
+  --line-strong: rgba(8, 145, 169, .46);
+  --text: #10252e;
+  --muted: #587985;
+  --muted-2: #7699a4;
+  --cyan: #098da5;
+  --cyan-soft: #08768a;
+  --violet: #7255d1;
+  --green: #178851;
+  --amber: #a96d0b;
+  --red: #bb3f58;
+  --shadow: 0 18px 45px rgba(42, 88, 101, .14);
+  --glow: 0 0 24px rgba(9, 141, 165, .16);
+}
+* { box-sizing: border-box; }
+html { min-height: 100%; font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; }
+body {
+  min-width: 320px;
+  min-height: 100vh;
+  margin: 0;
+  color: var(--text);
+  background:
+    radial-gradient(1000px 620px at 74% -10%, rgba(79, 111, 255, .16), transparent 62%),
+    radial-gradient(760px 560px at 10% 94%, rgba(37, 202, 203, .1), transparent 60%),
+    linear-gradient(135deg, var(--bg), var(--bg-2));
+  overflow-x: hidden;
+}
+body::before {
+  position: fixed;
+  inset: 0;
+  z-index: -2;
+  pointer-events: none;
+  content: "";
+  opacity: .32;
+  background-image:
+    linear-gradient(rgba(115, 213, 237, .055) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(115, 213, 237, .055) 1px, transparent 1px);
+  background-size: 42px 42px;
+  mask-image: linear-gradient(to bottom, black, transparent 90%);
+}
+body::after {
+  position: fixed;
+  inset: 0;
+  z-index: 20;
+  pointer-events: none;
+  content: "";
+  opacity: .035;
+  background: repeating-linear-gradient(0deg, transparent 0 3px, currentColor 4px, transparent 5px);
+  mix-blend-mode: screen;
+}
+button, input { font: inherit; }
+button { border: 0; cursor: pointer; }
+button:focus-visible, input:focus-visible { outline: 2px solid var(--cyan); outline-offset: 3px; }
+
+/* --- coque -------------------------------------------------------------- */
+.z-shell { width: min(100%, var(--max)); min-height: 100vh; margin: 0 auto; padding: 0 22px 20px; }
+.z-topbar {
+  position: sticky;
+  top: 0;
+  z-index: 15;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  min-height: 78px;
+  padding: calc(10px + var(--safe-t)) 0 10px;
+  background: linear-gradient(var(--bg) 65%, transparent);
+  backdrop-filter: blur(12px);
+}
+.z-brand { display: flex; align-items: center; gap: 12px; min-width: 0; }
+.z-brand-mark, .z-mini-orb {
+  position: relative;
+  display: grid;
+  flex: 0 0 auto;
+  place-items: center;
+  width: 42px;
+  height: 42px;
+  border: 1px solid var(--line-strong);
+  border-radius: 50%;
+  background: radial-gradient(circle at 30% 24%, #e3ffff 0 4%, transparent 12%), conic-gradient(from 220deg, var(--green), var(--cyan), var(--violet), var(--green));
+  box-shadow: 0 0 18px rgba(104, 235, 255, .32), 0 0 0 5px rgba(104, 235, 255, .04);
+}
+.z-brand-mark::before, .z-mini-orb::before { position: absolute; inset: 7px; content: ""; border: 1px solid rgba(236, 255, 255, .72); border-radius: 50%; }
+.z-brand-mark::after, .z-mini-orb::after { position: absolute; inset: 13px; content: ""; border: 1px solid rgba(236, 255, 255, .5); border-radius: 50%; }
+.z-brand-dot { position: relative; z-index: 1; width: 9px; height: 9px; border-radius: 50%; background: #f2ffff; box-shadow: 0 0 12px 4px rgba(242, 255, 255, .9); }
+.z-brand-copy { min-width: 0; }
+.z-brand-name { font-size: 1.16rem; font-weight: 850; letter-spacing: .22em; line-height: 1; }
+.z-brand-sub { margin-top: 6px; overflow: hidden; color: var(--muted); font-size: .62rem; letter-spacing: .17em; text-overflow: ellipsis; text-transform: uppercase; white-space: nowrap; }
+.z-top-actions { display: flex; align-items: center; gap: 9px; }
+.z-offline {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 34px;
+  padding: 0 11px;
+  border: 1px solid rgba(125, 242, 175, .32);
+  border-radius: 999px;
+  color: var(--green);
+  background: rgba(125, 242, 175, .07);
+  font-size: .64rem;
+  font-weight: 750;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+}
+.z-status-dot { width: 7px; height: 7px; border-radius: 50%; background: currentColor; box-shadow: 0 0 10px currentColor; }
+.z-top-btn {
+  width: 36px;
+  height: 36px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  color: var(--muted);
+  background: var(--panel);
+  transition: border-color .18s, color .18s, transform .18s;
+}
+.z-top-btn:hover { border-color: var(--line-strong); color: var(--cyan); transform: translateY(-1px); }
+
+.z-grid { display: grid; grid-template-columns: 228px minmax(0, 1fr) 248px; gap: 16px; align-items: start; }
+.z-panel {
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--panel);
+  box-shadow: var(--shadow);
+  backdrop-filter: blur(16px);
+}
+.z-sidebar, .z-telemetry { padding: 14px; }
+.z-eyebrow { color: var(--muted-2); font-size: .59rem; font-weight: 750; letter-spacing: .16em; text-transform: uppercase; }
+.z-side-profile { display: flex; align-items: center; gap: 10px; padding: 8px 4px 18px; border-bottom: 1px solid var(--line); }
+.z-profile-avatar { display: grid; place-items: center; width: 38px; height: 38px; border: 1px solid rgba(104, 235, 255, .34); border-radius: 12px; color: var(--cyan-soft); background: rgba(104, 235, 255, .1); font-weight: 800; }
+.z-profile-name { overflow: hidden; font-size: .83rem; font-weight: 750; text-overflow: ellipsis; white-space: nowrap; }
+.z-profile-meta { margin-top: 3px; color: var(--muted); font-size: .62rem; }
+.z-nav { display: grid; gap: 5px; margin-top: 16px; }
+.z-nav-btn {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  min-height: 44px;
+  padding: 0 11px;
+  border: 1px solid transparent;
+  border-radius: 10px;
+  color: var(--muted);
+  background: transparent;
+  text-align: left;
+  transition: background .18s, border-color .18s, color .18s;
+}
+.z-nav-btn:hover { border-color: var(--line); color: var(--text); background: rgba(104, 235, 255, .05); }
+.z-nav-btn.active { border-color: rgba(104, 235, 255, .32); color: var(--cyan-soft); background: rgba(104, 235, 255, .1); box-shadow: inset 3px 0 var(--cyan); }
+.z-nav-icon { width: 22px; color: var(--cyan); font-size: 1rem; text-align: center; }
+.z-nav-label { font-size: .75rem; font-weight: 700; letter-spacing: .03em; }
+.z-side-bottom { margin-top: 24px; padding-top: 14px; border-top: 1px solid var(--line); }
+.z-side-tip { margin: 9px 2px 0; color: var(--muted); font-size: .7rem; line-height: 1.6; }
+.z-side-tip code { padding: 2px 5px; border: 1px solid var(--line); border-radius: 5px; color: var(--cyan-soft); background: rgba(104, 235, 255, .06); font-size: .66rem; }
+
+/* --- scène centrale ----------------------------------------------------- */
+.z-workspace { min-width: 0; display: grid; gap: 16px; }
+.z-stage { position: relative; min-height: 520px; overflow: hidden; padding: 20px; border: 1px solid var(--line); border-radius: var(--radius); background: linear-gradient(145deg, rgba(13, 28, 39, .9), rgba(7, 14, 22, .88)); box-shadow: var(--shadow); }
+[data-theme="light"] .z-stage { background: linear-gradient(145deg, rgba(255, 255, 255, .95), rgba(232, 246, 249, .88)); }
+.z-stage::before { position: absolute; inset: 13px; pointer-events: none; content: ""; border: 1px solid rgba(104, 235, 255, .08); border-radius: 11px; }
+.z-stage::after { position: absolute; top: 54px; right: -55px; width: 190px; height: 190px; content: ""; border: 1px solid rgba(167, 139, 255, .16); border-radius: 50%; box-shadow: 0 0 0 24px rgba(167, 139, 255, .025), 0 0 0 48px rgba(167, 139, 255, .018); }
+.z-stage-head { position: relative; z-index: 2; display: flex; align-items: flex-start; justify-content: space-between; gap: 14px; }
+.z-stage-title { margin-top: 5px; font-size: clamp(1.25rem, 2.2vw, 1.8rem); font-weight: 800; letter-spacing: -.03em; }
+.z-stage-title span { color: var(--cyan); }
+.z-stage-sub { margin-top: 6px; color: var(--muted); font-size: .72rem; }
+.z-stage-readout { display: grid; gap: 5px; min-width: 112px; padding: 9px 10px; border-left: 2px solid var(--cyan); background: rgba(104, 235, 255, .045); text-align: right; }
+.z-readout-label { color: var(--muted-2); font-size: .55rem; letter-spacing: .16em; text-transform: uppercase; }
+.z-readout-value { color: var(--cyan-soft); font: 750 .77rem/1.1 ui-monospace, SFMono-Regular, Menlo, monospace; }
+.z-orb-zone { position: absolute; top: 106px; right: 0; bottom: 0; left: 0; display: grid; place-items: center; }
+.z-orb-hud { position: relative; display: grid; place-items: center; width: min(54vw, 335px); aspect-ratio: 1; }
+.z-orb {
+  position: relative;
+  z-index: 2;
+  display: grid;
+  place-items: center;
+  width: 144px;
+  height: 144px;
+  border: 1px solid rgba(191, 251, 255, .68);
+  border-radius: 50%;
+  background: radial-gradient(circle at 34% 26%, #f3ffff 0 3%, #aef9ff 8%, transparent 18%), radial-gradient(circle, rgba(73, 203, 255, .75), rgba(111, 78, 218, .5) 44%, rgba(15, 28, 47, .5) 68%, transparent 69%);
+  box-shadow: 0 0 0 9px rgba(104, 235, 255, .055), 0 0 0 18px rgba(167, 139, 255, .035), 0 0 46px rgba(104, 235, 255, .6), inset 0 0 28px rgba(211, 255, 255, .48);
+  animation: z-orb-breathe 3.8s ease-in-out infinite;
+}
+.z-orb::before { position: absolute; inset: 16px; content: ""; border: 1px solid rgba(228, 255, 255, .75); border-radius: 50%; animation: z-spin 9s linear infinite; }
+.z-orb::after { position: absolute; inset: 31px; content: ""; border: 1px dashed rgba(228, 255, 255, .58); border-radius: 50%; animation: z-spin-reverse 7s linear infinite; }
+.z-orb-core { position: relative; z-index: 3; width: 34px; height: 34px; border: 2px solid #f3ffff; border-radius: 50%; background: radial-gradient(circle at 38% 32%, #fff, var(--cyan) 32%, #4e7bff 70%, #9d67ee); box-shadow: 0 0 12px 5px #d7ffff, 0 0 35px 14px rgba(104, 235, 255, .6); }
+.z-ring { position: absolute; border: 1px solid rgba(104, 235, 255, .23); border-radius: 50%; transform: rotate(24deg); }
+.z-ring.one { inset: 15%; border-left-color: var(--cyan); border-right-color: transparent; animation: z-spin 10s linear infinite; }
+.z-ring.two { inset: 6%; border-top-color: var(--violet); border-bottom-color: transparent; transform: rotate(-35deg); animation: z-spin-reverse 14s linear infinite; }
+.z-ring.three { inset: -3%; border-color: rgba(125, 242, 175, .16); border-left-color: var(--green); transform: rotate(62deg); animation: z-spin 20s linear infinite; }
+.z-orb-label { position: absolute; bottom: 4%; color: var(--muted); font: 700 .55rem/1 ui-monospace, SFMono-Regular, Menlo, monospace; letter-spacing: .2em; text-transform: uppercase; }
+.z-orb-corner { position: absolute; color: var(--muted-2); font: .56rem/1.3 ui-monospace, SFMono-Regular, Menlo, monospace; }
+.z-orb-corner.tl { top: 8%; left: 5%; }
+.z-orb-corner.br { right: 3%; bottom: 18%; text-align: right; }
+@keyframes z-spin { to { transform: rotate(384deg); } }
+@keyframes z-spin-reverse { to { transform: rotate(-395deg); } }
+@keyframes z-orb-breathe { 50% { filter: saturate(1.3) brightness(1.08); transform: scale(1.035); } }
+.z-wave { position: absolute; bottom: 10%; left: 50%; display: flex; align-items: center; gap: 4px; height: 42px; transform: translateX(-50%); }
+.z-wave i { display: block; width: 3px; height: 14px; border-radius: 9px; background: var(--cyan); box-shadow: 0 0 8px rgba(104, 235, 255, .5); animation: z-wave 1.1s ease-in-out infinite; }
+.z-wave i:nth-child(2n) { animation-delay: -.25s; background: var(--violet); }
+.z-wave i:nth-child(3n) { animation-delay: -.55s; background: var(--green); }
+.z-wave i:nth-child(4n) { animation-delay: -.72s; }
+@keyframes z-wave { 50% { height: 38px; opacity: .55; } }
+.z-stage-footer { position: absolute; right: 21px; bottom: 19px; left: 21px; display: flex; align-items: center; justify-content: space-between; gap: 12px; color: var(--muted); font-size: .62rem; }
+.z-stage-state { display: inline-flex; align-items: center; gap: 7px; }
+.z-stage-state b { color: var(--green); font-weight: 750; letter-spacing: .08em; text-transform: uppercase; }
+.z-stage-state .z-status-dot { width: 6px; height: 6px; }
+.z-stage-coords { color: var(--muted-2); font: .57rem/1 ui-monospace, SFMono-Regular, Menlo, monospace; }
+.z-stage.scanning .z-orb { animation: z-orb-breathe .7s ease-in-out infinite; }
+.z-stage.scanning .z-wave i { animation-duration: .35s; }
+.z-stage.listening .z-orb { box-shadow: 0 0 0 9px rgba(255, 115, 141, .08), 0 0 0 18px rgba(255, 115, 141, .045), 0 0 58px rgba(255, 115, 141, .62), inset 0 0 28px rgba(255, 230, 235, .55); }
+.z-stage.listening .z-stage-state b { color: var(--red); }
+
+/* --- module et console -------------------------------------------------- */
+.z-module { padding: 16px; }
+.z-module-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; padding-bottom: 12px; border-bottom: 1px solid var(--line); }
+.z-module-title { font-size: .91rem; font-weight: 800; letter-spacing: .02em; }
+.z-module-sub { margin-top: 4px; color: var(--muted); font-size: .67rem; }
+.z-module-content { min-height: 82px; padding-top: 13px; }
+.z-signal-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+.z-signal { padding: 10px; border: 1px solid var(--line); border-radius: 9px; background: rgba(104, 235, 255, .035); }
+.z-signal-label { color: var(--muted-2); font-size: .55rem; letter-spacing: .1em; text-transform: uppercase; }
+.z-signal-value { margin-top: 8px; color: var(--cyan-soft); font: 800 .88rem/1 ui-monospace, SFMono-Regular, Menlo, monospace; }
+.z-module-list { display: grid; gap: 7px; }
+.z-list-item { display: flex; align-items: center; gap: 9px; min-height: 36px; padding: 7px 9px; border: 1px solid var(--line); border-radius: 9px; background: rgba(104, 235, 255, .03); }
+.z-list-item.done { opacity: .48; }
+.z-list-item.done .z-list-text { text-decoration: line-through; }
+.z-list-toggle { width: 23px; height: 23px; border: 1px solid var(--line-strong); border-radius: 7px; color: var(--cyan); background: transparent; }
+.z-list-text { flex: 1; min-width: 0; overflow: hidden; font-size: .7rem; text-overflow: ellipsis; white-space: nowrap; }
+.z-list-meta { color: var(--muted-2); font-size: .57rem; }
+.z-inline-action { min-height: 31px; padding: 0 10px; border: 1px solid var(--line-strong); border-radius: 8px; color: var(--cyan-soft); background: rgba(104, 235, 255, .07); font-size: .65rem; font-weight: 700; }
+.z-inline-action:hover { background: rgba(104, 235, 255, .14); }
+.z-empty { padding: 17px 4px; color: var(--muted); font-size: .72rem; }
+.z-protocols { display: grid; grid-template-columns: repeat(3, 1fr); gap: 9px; }
+.z-protocol { padding: 10px; border: 1px solid var(--line); border-radius: 9px; }
+.z-protocol b { display: block; color: var(--cyan-soft); font-size: .67rem; }
+.z-protocol span { display: block; margin-top: 5px; color: var(--muted); font-size: .62rem; line-height: 1.45; }
+.z-console { display: flex; flex-direction: column; min-height: 310px; overflow: hidden; }
+.z-console-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 13px 16px; border-bottom: 1px solid var(--line); }
+.z-console-title { display: flex; align-items: center; gap: 8px; font-size: .72rem; font-weight: 800; letter-spacing: .12em; text-transform: uppercase; }
+.z-console-title .z-status-dot { width: 6px; height: 6px; color: var(--cyan); background: var(--cyan); }
+.z-console-hint { color: var(--muted-2); font-size: .62rem; }
+.z-messages { flex: 1; max-height: 290px; min-height: 160px; overflow-y: auto; padding: 15px 16px 5px; scrollbar-color: var(--muted-2) transparent; }
+.z-message { display: flex; gap: 9px; margin-bottom: 13px; animation: z-message-in .24s ease both; }
+.z-message.user { justify-content: flex-end; }
+.z-message.user .z-message-avatar { order: 2; color: var(--violet); border-color: rgba(167, 139, 255, .35); background: rgba(167, 139, 255, .1); }
+.z-message-avatar { display: grid; place-items: center; width: 25px; height: 25px; flex: 0 0 25px; margin-top: 2px; border: 1px solid rgba(104, 235, 255, .35); border-radius: 8px; color: var(--cyan); background: rgba(104, 235, 255, .1); font: 800 .55rem/1 ui-monospace, SFMono-Regular, Menlo, monospace; }
+.z-message-bubble { max-width: min(84%, 560px); padding: 9px 11px; border: 1px solid var(--line); border-radius: 3px 11px 11px 11px; color: var(--text); background: rgba(104, 235, 255, .065); font-size: .75rem; line-height: 1.55; white-space: pre-wrap; }
+.z-message.user .z-message-bubble { border-radius: 11px 3px 11px 11px; border-color: rgba(167, 139, 255, .22); background: rgba(167, 139, 255, .12); }
+.z-message-tag { display: block; margin-top: 5px; color: var(--muted-2); font: .52rem/1 ui-monospace, SFMono-Regular, Menlo, monospace; letter-spacing: .1em; }
+@keyframes z-message-in { from { opacity: 0; transform: translateY(5px); } }
+.z-quick { display: flex; flex-wrap: wrap; gap: 6px; padding: 0 16px 11px; }
+.z-quick button { min-height: 29px; padding: 0 9px; border: 1px solid var(--line); border-radius: 999px; color: var(--muted); background: rgba(104, 235, 255, .035); font-size: .62rem; transition: border-color .18s, color .18s, background .18s; }
+.z-quick button:hover { border-color: var(--line-strong); color: var(--cyan-soft); background: rgba(104, 235, 255, .09); }
+.z-compose { display: flex; align-items: center; gap: 8px; padding: 11px 13px calc(11px + var(--safe-b)); border-top: 1px solid var(--line); background: rgba(4, 10, 16, .25); }
+[data-theme="light"] .z-compose { background: rgba(226, 243, 247, .6); }
+.z-command-input { min-width: 0; flex: 1; height: 43px; padding: 0 13px; border: 1px solid var(--line); border-radius: 10px; color: var(--text); background: rgba(104, 235, 255, .045); font-size: .76rem; }
+.z-command-input::placeholder { color: var(--muted-2); }
+.z-command-input:focus { border-color: var(--line-strong); box-shadow: 0 0 0 3px rgba(104, 235, 255, .08); outline: 0; }
+.z-compose-btn { display: grid; place-items: center; width: 43px; height: 43px; flex: 0 0 43px; border: 1px solid var(--line); border-radius: 10px; color: var(--cyan-soft); background: rgba(104, 235, 255, .07); font-size: 1rem; transition: background .18s, border-color .18s, transform .15s; }
+.z-compose-btn:hover { border-color: var(--line-strong); background: rgba(104, 235, 255, .15); }
+.z-compose-btn:active { transform: scale(.94); }
+.z-compose-btn.mic.listening { border-color: var(--red); color: #fff; background: rgba(255, 115, 141, .3); box-shadow: 0 0 0 4px rgba(255, 115, 141, .09); }
+.z-compose-btn:disabled { cursor: not-allowed; opacity: .35; }
+
+/* --- télémétrie --------------------------------------------------------- */
+.z-telemetry { display: grid; gap: 12px; }
+.z-tele-card { padding: 13px; }
+.z-tele-title { display: flex; align-items: center; justify-content: space-between; gap: 7px; padding-bottom: 10px; border-bottom: 1px solid var(--line); color: var(--muted); font-size: .61rem; font-weight: 800; letter-spacing: .14em; text-transform: uppercase; }
+.z-tele-title b { color: var(--cyan); font-size: .58rem; }
+.z-clock { padding: 14px 0 8px; color: var(--cyan-soft); font: 800 1.7rem/1 ui-monospace, SFMono-Regular, Menlo, monospace; letter-spacing: -.05em; }
+.z-date { color: var(--muted); font-size: .64rem; }
+.z-metric { padding: 12px 0 0; }
+.z-metric-row { display: flex; align-items: center; justify-content: space-between; gap: 7px; color: var(--muted); font-size: .64rem; }
+.z-metric-row b { color: var(--text); font: 700 .65rem/1 ui-monospace, SFMono-Regular, Menlo, monospace; }
+.z-meter { height: 5px; margin-top: 7px; overflow: hidden; border-radius: 9px; background: rgba(128, 185, 211, .12); }
+.z-meter i { display: block; width: 82%; height: 100%; border-radius: inherit; background: linear-gradient(90deg, var(--cyan), var(--violet)); box-shadow: 0 0 8px var(--cyan); transition: width .5s; }
+.z-badges { display: grid; gap: 6px; margin-top: 11px; }
+.z-badge { display: flex; align-items: center; gap: 8px; min-height: 31px; padding: 0 8px; border: 1px solid var(--line); border-radius: 8px; color: var(--muted); background: rgba(104, 235, 255, .03); font-size: .61rem; }
+.z-badge b { color: var(--green); font-size: .65rem; }
+.z-activity { display: grid; gap: 9px; padding-top: 11px; }
+.z-activity-row { display: flex; gap: 8px; color: var(--muted); font: .6rem/1.35 ui-monospace, SFMono-Regular, Menlo, monospace; }
+.z-activity-row::before { width: 5px; height: 5px; flex: 0 0 5px; margin-top: 4px; border-radius: 50%; content: ""; background: var(--cyan); box-shadow: 0 0 7px var(--cyan); }
+.z-activity-row.green::before { background: var(--green); box-shadow: 0 0 7px var(--green); }
+.z-activity-row.violet::before { background: var(--violet); box-shadow: 0 0 7px var(--violet); }
+.z-footer { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 18px 4px 0; color: var(--muted-2); font: .58rem/1.4 ui-monospace, SFMono-Regular, Menlo, monospace; letter-spacing: .08em; text-transform: uppercase; }
+.z-footer span:last-child { color: var(--cyan); }
+
+@media (max-width: 1150px) {
+  .z-grid { grid-template-columns: 200px minmax(0, 1fr); }
+  .z-telemetry { grid-column: 1 / -1; grid-template-columns: repeat(3, 1fr); align-items: start; }
+}
+@media (max-width: 760px) {
+  .z-shell { padding: 0 12px 16px; }
+  .z-topbar { min-height: 69px; }
+  .z-brand-sub { display: none; }
+  .z-offline { padding: 0 8px; font-size: .55rem; }
+  .z-grid { display: flex; flex-direction: column; }
+  .z-sidebar { width: 100%; padding: 10px; }
+  .z-side-profile, .z-side-bottom { display: none; }
+  .z-nav { display: flex; gap: 5px; margin: 0; overflow-x: auto; scrollbar-width: none; }
+  .z-nav::-webkit-scrollbar { display: none; }
+  .z-nav-btn { width: auto; flex: 1 0 auto; justify-content: center; min-height: 38px; padding: 0 10px; }
+  .z-nav-label { font-size: .65rem; }
+  .z-stage { min-height: 430px; padding: 17px; }
+  .z-stage-readout { min-width: 94px; }
+  .z-orb-zone { top: 94px; }
+  .z-orb-hud { width: min(76vw, 305px); }
+  .z-orb { width: 126px; height: 126px; }
+  .z-stage-footer { right: 17px; bottom: 16px; left: 17px; }
+  .z-signal-grid, .z-protocols { grid-template-columns: 1fr; }
+  .z-module { padding: 13px; }
+  .z-telemetry { display: grid; grid-template-columns: 1fr 1fr; width: 100%; }
+  .z-tele-card:last-child { grid-column: 1 / -1; }
+  .z-footer { flex-direction: column; align-items: flex-start; }
+}
+@media (max-width: 430px) {
+  .z-brand-name { font-size: .98rem; letter-spacing: .16em; }
+  .z-brand-mark { width: 36px; height: 36px; }
+  .z-top-actions { gap: 5px; }
+  .z-offline { max-width: 105px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .z-stage { min-height: 395px; }
+  .z-stage-sub { max-width: 180px; }
+  .z-stage-readout { display: none; }
+  .z-orb-zone { top: 77px; }
+  .z-compose { gap: 5px; padding-right: 8px; padding-left: 8px; }
+  .z-compose-btn { width: 39px; height: 39px; flex-basis: 39px; }
+  .z-command-input { height: 39px; padding: 0 10px; font-size: .7rem; }
+  .z-telemetry { grid-template-columns: 1fr; }
+  .z-tele-card:last-child { grid-column: auto; }
+}
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; }
+}
+</style>
+</head>
+<body>
+<div class="z-shell">
+  <header class="z-topbar">
+    <div class="z-brand">
+      <div class="z-brand-mark" aria-hidden="true"><span class="z-brand-dot"></span></div>
+      <div class="z-brand-copy">
+        <div class="z-brand-name">ZARVIS</div>
+        <div class="z-brand-sub">Autonomous intelligence · private command system</div>
+      </div>
+    </div>
+    <div class="z-top-actions">
+      <div class="z-offline"><span class="z-status-dot"></span> Noyau hors-ligne</div>
+      <button class="z-top-btn" id="theme-toggle" type="button" aria-label="Changer l'apparence" title="Changer l'apparence">◐</button>
+    </div>
+  </header>
+
+  <div class="z-grid">
+    <aside class="z-panel z-sidebar" aria-label="Modules ZARVIS">
+      <div class="z-side-profile">
+        <div class="z-profile-avatar" id="profile-avatar">OP</div>
+        <div style="min-width:0"><div class="z-profile-name" id="profile-name">Opérateur</div><div class="z-profile-meta">Accès local · niveau 01</div></div>
+      </div>
+      <div class="z-eyebrow">Modules actifs</div>
+      <nav class="z-nav">
+        <button class="z-nav-btn active" type="button" data-module="command"><span class="z-nav-icon">◈</span><span class="z-nav-label">Command deck</span></button>
+        <button class="z-nav-btn" type="button" data-module="tasks"><span class="z-nav-icon">✓</span><span class="z-nav-label">Tâches</span></button>
+        <button class="z-nav-btn" type="button" data-module="notes"><span class="z-nav-icon">⌁</span><span class="z-nav-label">Notes</span></button>
+        <button class="z-nav-btn" type="button" data-module="protocols"><span class="z-nav-icon">◎</span><span class="z-nav-label">Protocoles</span></button>
+      </nav>
+      <div class="z-side-bottom">
+        <div class="z-eyebrow">Commande rapide</div>
+        <p class="z-side-tip">Écrivez <code>aide</code> pour connaître les fonctions locales de ZARVIS.</p>
+      </div>
+    </aside>
+
+    <main class="z-workspace">
+      <section class="z-stage" id="z-stage" aria-labelledby="stage-title">
+        <div class="z-stage-head">
+          <div>
+            <div class="z-eyebrow">Session autonome // 01</div>
+            <div class="z-stage-title" id="stage-title">Centre de <span>commande</span></div>
+            <div class="z-stage-sub" id="stage-sub">Interface prête. En attente d'une instruction.</div>
+          </div>
+          <div class="z-stage-readout"><span class="z-readout-label">Local time</span><span class="z-readout-value" id="stage-time">--:--:--</span><span class="z-readout-label">Core 100%</span></div>
+        </div>
+        <div class="z-orb-zone">
+          <div class="z-orb-hud" aria-label="Noyau ZARVIS opérationnel">
+            <span class="z-orb-corner tl">CORE / 01<br>SECURE</span>
+            <span class="z-orb-corner br">VOICE READY<br>TEXT LOCAL</span>
+            <div class="z-ring one"></div><div class="z-ring two"></div><div class="z-ring three"></div>
+            <div class="z-orb"><span class="z-orb-core"></span></div>
+            <div class="z-orb-label" id="orb-label">ZARVIS ONLINE</div>
+            <div class="z-wave" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
+          </div>
+        </div>
+        <div class="z-stage-footer"><div class="z-stage-state"><span class="z-status-dot"></span><b id="stage-state">Prêt à recevoir</b></div><div class="z-stage-coords" id="stage-coords">LOCAL // 0.0.0.0 // ENCRYPTED</div></div>
+      </section>
+
+      <section class="z-panel z-module" aria-live="polite">
+        <div class="z-module-head"><div><div class="z-eyebrow" id="module-kicker">Command deck</div><div class="z-module-title" id="module-title">Vue d'ensemble du noyau</div><div class="z-module-sub" id="module-sub">Les fonctions et données restent dans ce navigateur.</div></div><button class="z-inline-action" id="module-action" type="button" data-command="scanne le système">Scanner</button></div>
+        <div class="z-module-content" id="module-content"></div>
+      </section>
+
+      <section class="z-panel z-console" aria-label="Console de conversation">
+        <div class="z-console-head"><div class="z-console-title"><span class="z-status-dot"></span> Console ZARVIS</div><div class="z-console-hint">local interpreter / ready</div></div>
+        <div class="z-messages" id="messages"></div>
+        <div class="z-quick">
+          <button type="button" data-command="Aide">Aide</button>
+          <button type="button" data-command="Scanne le système">Diagnostic</button>
+          <button type="button" data-command="Quelle heure est-il ?">Heure</button>
+          <button type="button" data-command="Donne-moi une idée">Inspiration</button>
+          <button type="button" data-command="Mes tâches">Tâches</button>
+        </div>
+        <form class="z-compose" id="command-form">
+          <button class="z-compose-btn mic" id="mic-button" type="button" aria-label="Parler à ZARVIS" title="Parler à ZARVIS">◉</button>
+          <input class="z-command-input" id="command-input" autocomplete="off" enterkeyhint="send" placeholder="Écrivez une commande à ZARVIS…" aria-label="Commande pour ZARVIS">
+          <button class="z-compose-btn" type="submit" aria-label="Envoyer" title="Envoyer">➤</button>
+        </form>
+      </section>
+    </main>
+
+    <aside class="z-panel z-telemetry" aria-label="Télémétrie locale">
+      <section class="z-tele-card">
+        <div class="z-tele-title">Temps local <b>LIVE</b></div>
+        <div class="z-clock" id="clock">--:--</div>
+        <div class="z-date" id="date">Chargement…</div>
+        <div class="z-metric"><div class="z-metric-row"><span>Session</span><b id="session-time">00:00:00</b></div><div class="z-meter"><i id="session-meter"></i></div></div>
+      </section>
+      <section class="z-tele-card">
+        <div class="z-tele-title">Ressources <b>LOCAL</b></div>
+        <div class="z-badges"><div class="z-badge"><b>✓</b><span>Stockage local actif</span></div><div class="z-badge"><b>✓</b><span>Aucune API distante</span></div><div class="z-badge"><b id="voice-badge">◉</b><span id="voice-badge-label">Voix disponible</span></div></div>
+        <div class="z-metric"><div class="z-metric-row"><span>Tâches</span><b id="task-count">0</b></div><div class="z-meter"><i id="task-meter" style="width:0%"></i></div></div>
+        <div class="z-metric"><div class="z-metric-row"><span>Notes</span><b id="note-count">0</b></div><div class="z-meter"><i id="note-meter" style="width:0%"></i></div></div>
+      </section>
+      <section class="z-tele-card">
+        <div class="z-tele-title">Journal système <b>RECENT</b></div>
+        <div class="z-activity" id="activity"></div>
+      </section>
+    </aside>
+  </div>
+  <footer class="z-footer"><span>ZARVIS // Autonomous Intelligence System</span><span>Private local core · no upload</span></footer>
+</div>
+
+<script>
+(function () {
+  "use strict";
+
+  var STORAGE_KEY = "zarvis-autonomous-core";
+  var SESSION_START = Date.now();
+  var state = loadState();
+  var recognition = null;
+  var timerTick = null;
+  var battery = null;
+
+  function $(id) { return document.getElementById(id); }
+  function all(selector) { return Array.prototype.slice.call(document.querySelectorAll(selector)); }
+  function escapeHtml(value) {
+    return String(value).replace(/[&<>"']/g, function (c) {
+      return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c];
+    });
+  }
+  function normalize(value) {
+    return String(value || "").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[’']/g, "'").replace(/\s+/g, " ").trim();
+  }
+  function loadState() {
+    var defaults = { name: "Opérateur", theme: "dark", voice: true, module: "command", tasks: [], notes: [], messages: [], events: [] };
+    try {
+      var saved = JSON.parse(localStorage.getItem(STORAGE_KEY) || "null");
+      if (!saved) return defaults;
+      Object.keys(defaults).forEach(function (key) { if (saved[key] === undefined) saved[key] = defaults[key]; });
+      return saved;
+    } catch (e) { return defaults; }
+  }
+  function saveState() {
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify({
+        name: state.name, theme: state.theme, voice: state.voice, module: state.module,
+        tasks: state.tasks.slice(-100), notes: state.notes.slice(-100)
+      }));
+    } catch (e) { /* stockage facultatif */ }
+  }
+  function formatTime(date, seconds) {
+    return date.toLocaleTimeString("fr-FR", seconds ? { hour: "2-digit", minute: "2-digit", second: "2-digit" } : { hour: "2-digit", minute: "2-digit" });
+  }
+  function formatDate(date) {
+    return date.toLocaleDateString("fr-FR", { weekday: "long", day: "numeric", month: "long", year: "numeric" });
+  }
+  function shortTime(date) {
+    return formatTime(date, false);
+  }
+  function initials(name) {
+    var parts = String(name || "Opérateur").trim().split(/\s+/).filter(Boolean);
+    return parts.slice(0, 2).map(function (x) { return x[0]; }).join("").toUpperCase() || "OP";
+  }
+  function addEvent(text, tone) {
+    state.events.unshift({ text: text, tone: tone || "", time: shortTime(new Date()) });
+    state.events = state.events.slice(0, 6);
+    renderActivity();
+  }
+  function addMessage(role, text) {
+    state.messages.push({ role: role, text: String(text) });
+    if (state.messages.length > 50) state.messages = state.messages.slice(-50);
+    renderMessages();
+  }
+  function speak(text) {
+    if (!state.voice || !("speechSynthesis" in window) || typeof SpeechSynthesisUtterance !== "function") return;
+    try {
+      var utterance = new SpeechSynthesisUtterance(String(text).replace(/[«»]/g, ""));
+      utterance.lang = "fr-FR";
+      utterance.rate = .96;
+      var voices = window.speechSynthesis.getVoices ? window.speechSynthesis.getVoices() : [];
+      for (var i = 0; i < voices.length; i++) {
+        if (/^fr/i.test(voices[i].lang || "")) { utterance.voice = voices[i]; break; }
+      }
+      window.speechSynthesis.cancel();
+      window.speechSynthesis.speak(utterance);
+    } catch (e) { /* audio facultatif */ }
+  }
+  function reply(text, shouldSpeak) {
+    addMessage("zarvis", text);
+    if (shouldSpeak !== false) speak(text);
+  }
+
+  function renderMessages() {
+    var box = $("messages");
+    if (!state.messages.length) {
+      box.innerHTML = '<div class="z-message"><div class="z-message-avatar">Z</div><div class="z-message-bubble">Bonjour ' + escapeHtml(state.name) + '. Je suis <b>ZARVIS</b>, un assistant autonome. Donnez-moi une commande : gérer vos tâches, prendre une note, calculer, lancer un minuteur ou analyser l’état du système.<span class="z-message-tag">ZARVIS // LOCAL CORE</span></div></div>';
+    } else {
+      box.innerHTML = state.messages.map(function (message) {
+        var user = message.role === "user";
+        return '<div class="z-message' + (user ? " user" : "") + '">' +
+          '<div class="z-message-avatar">' + (user ? "VOUS" : "Z") + '</div>' +
+          '<div class="z-message-bubble">' + escapeHtml(message.text) + '<span class="z-message-tag">' + (user ? "OPERATOR INPUT" : "ZARVIS // LOCAL CORE") + '</span></div></div>';
+      }).join("");
+    }
+    box.scrollTop = box.scrollHeight;
+  }
+
+  function renderActivity() {
+    var box = $("activity");
+    var events = state.events.length ? state.events : [{ text: "Core initialisé", tone: "green", time: shortTime(new Date()) }, { text: "Mode hors-ligne confirmé", tone: "", time: shortTime(new Date()) }];
+    box.innerHTML = events.slice(0, 5).map(function (event) {
+      return '<div class="z-activity-row ' + escapeHtml(event.tone || "") + '"><span>[' + escapeHtml(event.time) + '] ' + escapeHtml(event.text) + '</span></div>';
+    }).join("");
+  }
+
+  function renderProfile() {
+    $("profile-name").textContent = state.name;
+    $("profile-avatar").textContent = initials(state.name);
+  }
+  function updateClock() {
+    var now = new Date();
+    $("clock").textContent = formatTime(now, false);
+    $("date").textContent = formatDate(now);
+    $("stage-time").textContent = formatTime(now, true);
+    var elapsed = Math.floor((Date.now() - SESSION_START) / 1000);
+    var hh = String(Math.floor(elapsed / 3600)).padStart(2, "0");
+    var mm = String(Math.floor((elapsed % 3600) / 60)).padStart(2, "0");
+    var ss = String(elapsed % 60).padStart(2, "0");
+    $("session-time").textContent = hh + ":" + mm + ":" + ss;
+    $("session-meter").style.width = Math.min(100, 18 + elapsed / 12) + "%";
+    updateTimer();
+  }
+  function updateTelemetry() {
+    $("task-count").textContent = state.tasks.filter(function (task) { return !task.done; }).length + "/" + state.tasks.length;
+    $("note-count").textContent = state.notes.length;
+    $("task-meter").style.width = state.tasks.length ? Math.round(state.tasks.filter(function (task) { return task.done; }).length / state.tasks.length * 100) + "%" : "0%";
+    $("note-meter").style.width = Math.min(100, state.notes.length * 14) + "%";
+    var available = typeof window.SpeechRecognition === "function" || typeof window.webkitSpeechRecognition === "function";
+    $("voice-badge").textContent = available ? "◉" : "—";
+    $("voice-badge-label").textContent = available ? "Entrée vocale navigateur" : "Entrée texte active";
+  }
+  function updateTimer() {
+    if (!state.timerEnd) {
+      $("stage-state").textContent = $("stage-state").textContent === "Minuteur actif" ? "Prêt à recevoir" : $("stage-state").textContent;
+      return;
+    }
+    var remaining = Math.max(0, state.timerEnd - Date.now());
+    if (remaining <= 0) {
+      state.timerEnd = 0;
+      $("stage-state").textContent = "Prêt à recevoir";
+      $("orb-label").textContent = "TIMER COMPLETE";
+      addEvent("Minuteur terminé", "green");
+      reply("Minuteur terminé. Je suis de nouveau disponible.");
+      saveState();
+      return;
+    }
+    var totalSeconds = Math.ceil(remaining / 1000);
+    var min = Math.floor(totalSeconds / 60);
+    var sec = String(totalSeconds % 60).padStart(2, "0");
+    $("stage-state").textContent = "Minuteur actif · " + min + ":" + sec;
+    $("orb-label").textContent = "TIMER // " + min + ":" + sec;
+  }
+
+  function applyTheme() {
+    document.documentElement.setAttribute("data-theme", state.theme);
+    $("theme-toggle").textContent = state.theme === "dark" ? "☼" : "◐";
+    $("theme-toggle").title = state.theme === "dark" ? "Passer en mode clair" : "Passer en mode sombre";
+  }
+
+  function moduleConfig(name) {
+    return {
+      command: { kicker: "Command deck", title: "Vue d'ensemble du noyau", sub: "Les fonctions et données restent dans ce navigateur." },
+      tasks: { kicker: "Task matrix", title: "Vos tâches locales", sub: "Une liste simple, privée et disponible sans connexion." },
+      notes: { kicker: "Memory vault", title: "Vos notes locales", sub: "Capturez une idée : elle reste dans le stockage de cet appareil." },
+      protocols: { kicker: "Operating protocols", title: "Ce que ZARVIS sait faire", sub: "Commandes locales disponibles maintenant." }
+    }[name] || { kicker: "Command deck", title: "Vue d'ensemble du noyau", sub: "Les fonctions et données restent dans ce navigateur." };
+  }
+  function renderModule() {
+    var config = moduleConfig(state.module);
+    $("module-kicker").textContent = config.kicker;
+    $("module-title").textContent = config.title;
+    $("module-sub").textContent = config.sub;
+    $("module-action").style.display = state.module === "protocols" ? "none" : "inline-flex";
+    all("[data-module]").forEach(function (button) { button.classList.toggle("active", button.dataset.module === state.module); });
+    var html = "";
+    if (state.module === "command") {
+      html = '<div class="z-signal-grid"><div class="z-signal"><div class="z-signal-label">Core status</div><div class="z-signal-value">NOMINAL</div></div><div class="z-signal"><div class="z-signal-label">Network</div><div class="z-signal-value">OFFLINE</div></div><div class="z-signal"><div class="z-signal-label">Privacy</div><div class="z-signal-value">LOCAL</div></div></div>';
+    } else if (state.module === "tasks") {
+      html = '<div class="z-module-list">' + (state.tasks.length ? state.tasks.slice().reverse().map(function (task, index) {
+        var realIndex = state.tasks.indexOf(task);
+        return '<div class="z-list-item' + (task.done ? " done" : "") + '"><button class="z-list-toggle" type="button" data-task-toggle="' + realIndex + '" aria-label="Terminer cette tâche">' + (task.done ? "✓" : "") + '</button><span class="z-list-text">' + escapeHtml(task.text) + '</span><span class="z-list-meta">' + escapeHtml(task.time || "local") + '</span></div>';
+      }).join("") : '<div class="z-empty">Aucune tâche. Dites « ajoute une tâche préparer le dîner ».</div>') + '</div>';
+    } else if (state.module === "notes") {
+      html = '<div class="z-module-list">' + (state.notes.length ? state.notes.slice().reverse().slice(0, 5).map(function (note) {
+        return '<div class="z-list-item"><span class="z-nav-icon">⌁</span><span class="z-list-text">' + escapeHtml(note.text) + '</span><span class="z-list-meta">' + escapeHtml(note.time || "local") + '</span></div>';
+      }).join("") : '<div class="z-empty">Aucune note. Dites « note acheter du lait » pour commencer.</div>') + '</div>';
+    } else {
+      html = '<div class="z-protocols"><div class="z-protocol"><b>COMMANDES</b><span>Ouvre un module, donne une instruction, demande « aide ».</span></div><div class="z-protocol"><b>MÉMOIRE</b><span>Notes et tâches conservées localement dans ce navigateur.</span></div><div class="z-protocol"><b>VOIX</b><span>Le texte est garanti hors-ligne. Le microphone dépend du navigateur.</span></div></div>';
+    }
+    $("module-content").innerHTML = html;
+  }
+  function setModule(name) {
+    if (!moduleConfig(name)) return;
+    state.module = name;
+    renderModule();
+    if (name !== "command") addEvent("Module ouvert : " + moduleConfig(name).title, "violet");
+  }
+
+  function calculate(expression) {
+    var expr = String(expression || "").replace(/,/g, ".").replace(/[×x]/g, "*").replace(/÷/g, "/").trim();
+    if (!expr || !/^[0-9+\-*/().\s]+$/.test(expr)) return null;
+    var compact = expr.replace(/\s+/g, "");
+    var tokens = compact.match(/\d+(?:\.\d+)?|[()+\-*/]/g);
+    if (!tokens || tokens.join("") !== compact) return null;
+    var position = 0;
+    function primary() {
+      var token = tokens[position++];
+      if (token === "+") return primary();
+      if (token === "-") return -primary();
+      if (token === "(") {
+        var inside = sum();
+        if (tokens[position++] !== ")") throw new Error("parenthesis");
+        return inside;
+      }
+      if (!token || !/^\d/.test(token)) throw new Error("number");
+      return +token;
+    }
+    function product() {
+      var value = primary();
+      while (tokens[position] === "*" || tokens[position] === "/") {
+        var op = tokens[position++], right = primary();
+        if (op === "/" && right === 0) throw new Error("zero");
+        value = op === "*" ? value * right : value / right;
+      }
+      return value;
+    }
+    function sum() {
+      var value = product();
+      while (tokens[position] === "+" || tokens[position] === "-") {
+        var op = tokens[position++], right = product();
+        value = op === "+" ? value + right : value - right;
+      }
+      return value;
+    }
+    try {
+      var result = sum();
+      if (position !== tokens.length || !isFinite(result)) return null;
+      return Math.round(result * 100000000) / 100000000;
+    } catch (e) { return null; }
+  }
+
+  function startTimer(amount, unit) {
+    var factor = /^(?:s|sec|secs|seconde|secondes|second|seconds)$/i.test(unit)
+      ? 1000 : /heure|hour|h/.test(unit) ? 3600000 : 60000;
+    var ms = amount * factor;
+    if (!isFinite(ms) || ms <= 0 || ms > 86400000) return false;
+    state.timerEnd = Date.now() + ms;
+    $("stage-state").textContent = "Minuteur actif";
+    addEvent("Minuteur réglé : " + amount + " " + unit, "green");
+    saveState();
+    return true;
+  }
+
+  function extractAfterTask(raw) {
+    return raw.replace(/^.*?(?:t[âa]che|task)\s*(?:[:\-]\s*)?/i, "").trim();
+  }
+  function extractAfterNote(raw) {
+    return raw.replace(/^(?:note|écris(?:-moi)? une note|ecris une note|write a note)\s*(?:[:\-]\s*)?/i, "").trim();
+  }
+
+  function runCommand(command) {
+    var raw = String(command || "").trim();
+    if (!raw) return;
+    addMessage("user", raw);
+    addEvent("Commande reçue", "");
+    var n = normalize(raw);
+
+    if (/^(aide|help|commandes|what can you do)/.test(n)) {
+      reply("Voici mes protocoles locaux :\n• ouvre les tâches, les notes ou les protocoles\n• ajoute une tâche préparer le dossier\n• note : appeler maman\n• termine la tâche 1\n• calcule 12 × 4\n• minuteur 5 minutes\n• quelle heure est-il ?\n• scanne le système\n• passe en mode sombre ou clair\n• je m'appelle Alex");
+      setModule("protocols");
+      return;
+    }
+    if (/(qui es tu|qui es-tu|ton nom|who are you)/.test(n)) {
+      reply("Je suis ZARVIS : un assistant autonome conçu pour piloter vos informations locales. Je n'envoie pas vos tâches ni vos notes vers un serveur.");
+      return;
+    }
+    if (/^(bonjour|salut|hello|hey|bonsoir)\b/.test(n)) {
+      reply("Bonjour " + state.name + ". Tous les systèmes sont prêts. Quelle est votre instruction ?");
+      return;
+    }
+    if (/(quelle heure|heure actuelle|what time)/.test(n)) {
+      reply("Il est " + formatTime(new Date(), false) + ".", false);
+      return;
+    }
+    if (/(quelle date|quel jour sommes nous|what date|what day)/.test(n)) {
+      reply("Nous sommes " + formatDate(new Date()) + ".", false);
+      return;
+    }
+    var nameMatch = /^(?:je m'?appelle|mon nom est|call me|my name is)\s+(.+)$/i.exec(raw) ||
+      /^(?:je m'?appelle|mon nom est|call me|my name is)\s+(.+)$/i.exec(n);
+    if (nameMatch) {
+      state.name = nameMatch[1].trim().slice(0, 32);
+      renderProfile(); saveState();
+      reply("Compris. Je vous appellerai désormais " + state.name + ".", false);
+      addEvent("Identité opérateur mise à jour", "violet");
+      return;
+    }
+    if (/(comment je m appelle|quel est mon nom|what is my name)/.test(n)) {
+      reply("Votre nom local est " + state.name + ".", false);
+      return;
+    }
+    if (/(scanne|scan|diagnostic|statut du systeme|system status|system check)/.test(n)) {
+      $("z-stage").classList.add("scanning");
+      $("stage-state").textContent = "Analyse en cours";
+      setTimeout(function () {
+        $("z-stage").classList.remove("scanning");
+        $("stage-state").textContent = "Prêt à recevoir";
+        $("orb-label").textContent = "ZARVIS ONLINE";
+      }, 900);
+      addEvent("Diagnostic système exécuté", "green");
+      reply("Diagnostic terminé. Core nominal, stockage local actif, réseau non requis. Vos données restent sur cet appareil.");
+      return;
+    }
+    var calcMatch = /^(?:calcule|calculer|combien font|calculate)\s+(.+)$/i.exec(raw);
+    if (calcMatch) {
+      var result = calculate(calcMatch[1]);
+      reply(result === null ? "Je peux calculer uniquement des opérations arithmétiques simples, sans exécuter de code." : "Le résultat est " + result + ".", false);
+      return;
+    }
+    var timerMatch = /(?:minuteur|timer).*?(\d+)\s*(secondes?|seconds?|sec|s|minutes?|mins?|min|heures?|hours?|h)?/i.exec(raw);
+    if (timerMatch) {
+      var amount = +timerMatch[1];
+      var unit = (timerMatch[2] || "minutes").toLowerCase();
+      if (startTimer(amount, unit)) reply("Minuteur réglé pour " + amount + " " + unit + ".", false);
+      else reply("Choisissez une durée entre 1 seconde et 24 heures.", false);
+      return;
+    }
+    if (/(arrete|annule|stop).*(minuteur|timer)/.test(n)) {
+      state.timerEnd = 0; saveState();
+      reply("Minuteur annulé.", false); return;
+    }
+
+    if (/(ajoute|nouvelle|crée|cree|create|add).*(tache|task)/.test(n) || /^(tache|task)\b/.test(n)) {
+      var taskText = extractAfterTask(raw);
+      if (!taskText || taskText === raw) {
+        setModule("tasks");
+        reply("Quel est le texte de la tâche ? Vous pouvez dire : « ajoute une tâche appeler Paul »." , false);
+      } else {
+        state.tasks.push({ text: taskText, done: false, time: shortTime(new Date()) });
+        saveState(); updateTelemetry(); renderModule();
+        addEvent("Tâche ajoutée", "green");
+        reply("Tâche ajoutée : " + taskText + ".", false);
+      }
+      return;
+    }
+    if (/(mes taches|liste des taches|show tasks|list tasks)/.test(n)) {
+      setModule("tasks");
+      var open = state.tasks.filter(function (task) { return !task.done; }).length;
+      reply(open ? "Vous avez " + open + " tâche(s) en cours." : "Aucune tâche en cours.", false);
+      return;
+    }
+    var doneMatch = /(?:termine|finis|complete|complete)\s+(?:la\s+)?(?:tache|task)\s*(\d+)/.exec(n);
+    if (doneMatch) {
+      var taskIndex = +doneMatch[1] - 1;
+      if (state.tasks[taskIndex]) {
+        state.tasks[taskIndex].done = true; saveState(); updateTelemetry(); renderModule();
+        addEvent("Tâche terminée", "green");
+        reply("Tâche numéro " + (taskIndex + 1) + " terminée.", false);
+      } else reply("Je ne trouve pas cette tâche.", false);
+      return;
+    }
+
+    if (/^(note|ecris une note|écris une note|write a note)\b/.test(n)) {
+      var noteText = extractAfterNote(raw);
+      if (!noteText || noteText === raw) {
+        setModule("notes");
+        reply("Que voulez-vous noter ?", false);
+      } else {
+        state.notes.push({ text: noteText, time: shortTime(new Date()), date: new Date().toISOString() });
+        saveState(); updateTelemetry(); renderModule();
+        addEvent("Note enregistrée", "violet");
+        reply("Note enregistrée dans le coffre local.", false);
+      }
+      return;
+    }
+    if (/(mes notes|liste mes notes|show notes|list notes)/.test(n)) {
+      setModule("notes");
+      reply(state.notes.length ? "J'ai retrouvé " + state.notes.length + " note(s) locale(s)." : "Votre coffre de notes est vide.", false);
+      return;
+    }
+
+    var requestedModule = null;
+    if (/\b(taches|tasks|task matrix)\b/.test(n)) requestedModule = "tasks";
+    else if (/\b(notes|memory|coffre)\b/.test(n)) requestedModule = "notes";
+    else if (/\b(protocoles|protocols|fonctions)\b/.test(n)) requestedModule = "protocols";
+    else if (/\b(command|commande|accueil|dashboard|centre)\b/.test(n)) requestedModule = "command";
+    if (requestedModule && /\b(ouvre|affiche|montre|open|show|go|va|retourne)\b/.test(n)) {
+      setModule(requestedModule);
+      reply("Module " + moduleConfig(requestedModule).title + " ouvert.", false);
+      return;
+    }
+
+    if (/(mode sombre|theme sombre|dark mode|night mode)/.test(n)) {
+      state.theme = "dark"; applyTheme(); saveState();
+      reply("Mode sombre activé.", false); return;
+    }
+    if (/(mode clair|theme clair|light mode|day mode)/.test(n)) {
+      state.theme = "light"; applyTheme(); saveState();
+      reply("Mode clair activé.", false); return;
+    }
+    if (/(silence|coupe la voix|mute|be quiet)/.test(n)) {
+      state.voice = false; saveState();
+      try { window.speechSynthesis.cancel(); } catch (e) {}
+      reply("Réponses vocales désactivées. Le texte reste actif.", false); return;
+    }
+    if (/(active la voix|avec la voix|unmute|voice on)/.test(n)) {
+      state.voice = true; saveState();
+      reply("Réponses vocales activées.", false); return;
+    }
+    if (/(idee|idée|inspire|inspiration|motivation|surprends)/.test(n)) {
+      var inspirations = [
+        "Une idée simple : choisissez une tâche importante et donnez-lui dix minutes, maintenant.",
+        "Protocole focus : une seule priorité, une respiration lente, puis le premier geste concret.",
+        "Vous n'avez pas besoin de tout finir aujourd'hui. Commencez par rendre la prochaine étape évidente."
+      ];
+      reply(inspirations[Math.floor(Math.random() * inspirations.length)]);
+      return;
+    }
+    if (/(rappel|reminder|notification)/.test(n)) {
+      reply("Je peux lancer un minuteur local. Dites par exemple : « minuteur 10 minutes ».", false); return;
+    }
+    reply("Je suis un noyau autonome : je comprends les commandes locales, mais je ne peux pas répondre à une question générale sans moteur d'intelligence supplémentaire. Dites « aide » pour voir mes protocoles.", false);
+  }
+
+  function listen() {
+    var Recognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (recognition) { try { recognition.stop(); } catch (e) {} return; }
+    if (typeof Recognition !== "function") {
+      reply("La reconnaissance vocale n'est pas disponible dans ce navigateur. Le champ texte est garanti hors-ligne.", false);
+      return;
+    }
+    try { recognition = new Recognition(); } catch (e) { reply("Microphone indisponible. Utilisez le champ texte.", false); return; }
+    recognition.lang = "fr-FR";
+    recognition.continuous = false;
+    recognition.interimResults = false;
+    recognition.onstart = function () { $("mic-button").classList.add("listening"); $("z-stage").classList.add("listening"); $("stage-state").textContent = "Écoute en cours"; $("orb-label").textContent = "LISTENING"; };
+    recognition.onresult = function (event) {
+      var transcript = event.results && event.results[0] && event.results[0][0] && event.results[0][0].transcript;
+      if (transcript) { $("command-input").value = transcript; runCommand(transcript); $("command-input").value = ""; }
+    };
+    recognition.onerror = function () { reply("La voix n'a pas pu être reconnue. Vous pouvez continuer avec le clavier.", false); };
+    recognition.onend = function () { $("mic-button").classList.remove("listening"); $("z-stage").classList.remove("listening"); $("stage-state").textContent = "Prêt à recevoir"; $("orb-label").textContent = "ZARVIS ONLINE"; recognition = null; };
+    try { recognition.start(); } catch (e) { recognition = null; reply("Microphone indisponible. Utilisez le champ texte.", false); }
+  }
+
+  document.addEventListener("click", function (event) {
+    var commandButton = event.target.closest ? event.target.closest("[data-command]") : null;
+    if (commandButton) { runCommand(commandButton.dataset.command); return; }
+    var moduleButton = event.target.closest ? event.target.closest("[data-module]") : null;
+    if (moduleButton) { setModule(moduleButton.dataset.module); return; }
+    var taskButton = event.target.closest ? event.target.closest("[data-task-toggle]") : null;
+    if (taskButton) {
+      var index = +taskButton.dataset.taskToggle;
+      if (state.tasks[index]) { state.tasks[index].done = !state.tasks[index].done; saveState(); updateTelemetry(); renderModule(); addEvent(state.tasks[index].done ? "Tâche terminée" : "Tâche réactivée", "green"); }
+    }
+  });
+  $("command-form").addEventListener("submit", function (event) {
+    event.preventDefault();
+    var input = $("command-input");
+    if (!input.value.trim()) return;
+    runCommand(input.value);
+    input.value = "";
+    input.focus();
+  });
+  $("mic-button").addEventListener("click", listen);
+  $("theme-toggle").addEventListener("click", function () {
+    state.theme = state.theme === "dark" ? "light" : "dark";
+    applyTheme(); saveState(); addEvent("Apparence changée", "violet");
+  });
+
+  // Une batterie est informative, jamais nécessaire au fonctionnement.
+  try {
+    if (navigator.getBattery) navigator.getBattery().then(function (b) { battery = b; });
+  } catch (e) { /* API facultative */ }
+
+  state.timerEnd = 0;
+  applyTheme(); renderProfile(); renderMessages(); renderActivity(); renderModule(); updateTelemetry(); updateClock();
+  addEvent("Core initialisé", "green");
+  setInterval(function () { updateClock(); updateTelemetry(); }, 500);
+
+  window.__ZARVIS = {
+    state: function () { return state; },
+    command: runCommand,
+    calculate: calculate,
+    module: setModule
+  };
+}());
+</script>
+</body>
+</html>
